@@ -15,7 +15,7 @@ The feature also provides the planning functionality required by the Home calend
 - Schedule routines on recurring weekdays and individual dates.
 - Add an existing routine to a date and optionally repeat it on other weekdays.
 - View scheduled routines on the Home calendar.
-- Start routine creation from the Home calendar without automatic scheduling.
+- Start routine creation from the Home calendar without assigning the selected date; allow choosing recurring weekdays during creation.
 - Preserve historical workout data when routines change or are deleted.
 - Store routine configuration and scheduling locally.
 
@@ -32,6 +32,7 @@ The feature also provides the planning functionality required by the Home calend
 ## 3. User Stories
 
 - As a user, I want to create and configure routines so that I can plan my workouts.
+- As a user, I want to choose a routine's recurring weekdays while creating it so that I can plan it immediately.
 - As a user, I want to organize the exercises in each routine, including their planned sets, repetitions and weights.
 - As a user, I want to schedule routines on recurring weekdays and additional dates independently.
 - As a user, I want to add an existing routine to a date and choose whether it repeats on that weekday or other weekdays.
@@ -85,6 +86,12 @@ Exercise entries in one routine MUST remain independent of entries in other rout
 
 Users MUST be able to modify a routine's name, recurring weekdays and exercise configuration.
 
+The routine list MUST provide a dedicated action to edit a routine's name. Editing the name MUST NOT modify its recurring weekdays, exercise configuration or scheduling assignments.
+
+Saving the name editor MUST persist only the name. Leaving the name editor without saving MUST discard the pending name change.
+
+Recurring weekdays and exercise configuration MUST remain editable through their dedicated actions in Routine Detail.
+
 Changes MUST affect the current configuration and future planning only. Previously saved workouts and their historical snapshots MUST remain unchanged.
 
 Actual performance recorded in previous workouts MUST NOT automatically modify planned weights.
@@ -92,6 +99,8 @@ Actual performance recorded in previous workouts MUST NOT automatically modify p
 ### FR-04: Duplicating routines
 
 Users MUST be able to duplicate an existing routine.
+
+The routine list MUST provide a duplicate action for each routine.
 
 Duplicating a routine MUST ask the user to choose the date on which the copy will be scheduled.
 
@@ -109,6 +118,8 @@ Editing either routine MUST NOT modify the other.
 
 Users MUST be able to permanently delete a routine.
 
+The routine list MUST provide access to deletion through the routine name editor, with explicit confirmation before the routine is removed.
+
 Deletion MUST remove the routine from current routine management and remove its recurring and individual-date scheduling assignments.
 
 Saved workouts, historical snapshots, historical exercise information, personal records and other historical information MUST remain available.
@@ -119,7 +130,7 @@ Deletion MUST be permanent rather than an automatic archival or soft-deletion op
 
 ### FR-06: Recurring scheduling
 
-Users MUST be able to assign zero or more recurring weekdays to a routine. Recurring weekdays MUST be configurable when editing the routine, and the date-assignment flow MAY add weekdays to the routine's recurring schedule.
+Users MUST be able to assign zero or more recurring weekdays to a routine. Recurring weekdays MUST be configurable when creating and editing the routine, and the date-assignment flow MAY add weekdays to the routine's recurring schedule.
 
 Recurring scheduling MUST operate independently of individual-date assignments.
 
@@ -163,22 +174,19 @@ A scheduled routine MUST NOT be treated as a completed workout. Completion statu
 
 The exact visual treatment is defined by the project's design documentation.
 
-### FR-09: Creating an unscheduled routine from Home
+### FR-09: Creating a routine from Home
 
 Users MUST be able to start routine creation from the Home calendar.
 
-Creating a routine MUST NOT assign it to the selected date or to any weekday. A new routine MUST start without recurring weekdays and without individual-date assignments.
+Creating a routine MUST NOT assign it to the selected date or create a one-time assignment. A new routine MAY start with zero or more recurring weekdays selected during creation.
 
-Routine creation MUST collect the routine name and its exercises. The creation
-sheet MUST expose `Cancelar` and `Guardar` without a navigation-header back
-button. When the user presses `Guardar` with a valid name and no exercises, the
-first exercise form MUST open automatically. Saving an exercise MUST open a blank
-exercise form again; cancelling that form MUST return to the routine draft, where
-`Guardar` persists the routine. Scheduling options MUST be presented afterward
-from the calendar.
+The creation sheet (S5) MUST first collect the routine name and its optional recurring weekdays (Monday–Sunday). It MUST NOT display an exercise section, exercise list or exercise-related feedback. The selected date MUST NOT be retained as a one-time assignment.
 
-If creation is cancelled or its sheet is dismissed, the routine MUST NOT be
-saved.
+Selecting no weekdays MUST leave the routine unscheduled. It can be assigned later from the calendar.
+
+When the user presses `Continuar` with a valid name, the first exercise form (S1) MUST open and preserve the name and weekdays. The routine MUST NOT be persisted until the first exercise is saved. Saving that exercise MUST create the routine with the selected weekdays and exercise and open Routine Detail. Additional exercises MUST be added from Routine Detail. Cancelling or dismissing S1 MUST return to S5 without saving the routine. Cancelling or dismissing S5 MUST save nothing.
+
+One-time date assignments MUST be presented afterward from the calendar.
 
 ### FR-10: Local persistence and availability
 
@@ -262,15 +270,25 @@ Removing either assignment MUST leave the other intact.
 
 **Then** the application MUST display the routines scheduled for that date without duplicates or falsely marking them as completed.
 
-### AC-09: Create from Home without automatic scheduling
+### AC-09: Create from Home with planning and without a one-time assignment
 
 **Given** the user has selected a date on Home,
 
 **When** they create a routine from that date,
 
-**Then** the routine MUST be saved without a one-time assignment or recurring weekdays and MUST NOT appear on the selected date until the user assigns it.
+**Then** S5 MUST collect the routine name and optional recurring weekdays, and MUST NOT create a one-time assignment for the selected date.
 
-If creation is cancelled, the routine MUST NOT be saved.
+**When** they press `Continuar` with a valid name,
+
+**Then** S1 MUST open for the first exercise and the routine MUST NOT yet be saved.
+
+**When** they save the first exercise,
+
+**Then** the routine MUST be created with the selected weekdays and that exercise and Routine Detail MUST open.
+
+If no weekdays are selected, the routine MUST be saved as unscheduled and MUST NOT appear on the calendar until it is assigned.
+
+If creation or S1 is cancelled, the routine MUST NOT be saved.
 
 ### AC-10: Work offline
 
@@ -301,6 +319,24 @@ If creation is cancelled, the routine MUST NOT be saved.
 **Then** the selected date's weekday and any additional selected weekdays MUST be added to the routine's recurring schedule, existing recurring weekdays MUST remain, and the routine MUST appear only once on the selected date.
 
 **And** adding another different routine to the same date MUST remain possible.
+
+### AC-13: Manage routine actions from the routine list
+
+**Given** a routine is shown in the routine list,
+
+**When** the user chooses its duplicate action,
+
+**Then** S3 MUST open to choose the target date for an independent copy.
+
+**When** the user chooses its edit-name action,
+
+**Then** a dedicated name editor MUST open and change only the routine name.
+
+**And** saving from the editor header MUST persist the name, while leaving without saving MUST discard the pending change.
+
+**And** the name editor MUST offer deletion with explicit confirmation.
+
+**And** Routine Detail MUST NOT show routine-level edit, duplicate or delete actions.
 
 ## 6. Error Handling
 

@@ -42,8 +42,8 @@ training tool, not a performance-intimidation interface and not a stereotyped
   (`docs/constitution.md` §8).
 
 Color is never the only carrier of meaning. Scheduled dates also have text in
-their accessibility labels, source chips carry labels, and action results are
-announced through visible feedback.
+their accessibility labels, source chips carry labels, and errors are presented
+with clear text.
 
 ## 3. Tokens
 
@@ -85,6 +85,18 @@ or dialogs.
 `xs / sm / md / lg / xl / xxl`. Use the tokens instead of hard-coded gaps and
 padding.
 
+### Sheet Header Spacing
+
+- `SheetScaffold` owns the outer spacing for every sheet header, body and footer.
+  Screens that compose a sheet must not add their own header margins.
+- Header and body content align to `spacing.lg` (16) horizontally. Header
+  actions inherit that margin from the scaffold; `SheetHeaderAction` keeps its
+  compact internal padding at zero.
+- The title and an action row use the same vertical padding. On iOS form sheets,
+  the header reserves `spacing.xxl` (32) above its content so the native grabber
+  does not crowd the title. Embedded sheets already reserve space with their
+  handle area; the web dialog uses the Paper dialog spacing.
+
 ### Radius
 
 - `sm`: 10
@@ -116,7 +128,9 @@ uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
 - Use `PaperProvider` once at the application root.
 - Shared wrappers in `src/shared/ui` own the app's default appearance:
   - `AppButton` for primary, secondary and destructive actions.
-  - `SheetTopActions` for the approved top `Cancelar`/`Guardar` rows in sheet forms.
+  - `SheetHeaderAction` for compact actions in a navigation header or on either
+    side of a sheet title, such as `Cancelar`/`Guardar` or
+    `Cancelar`/`Continuar`.
   - `AppTextInput` for outlined fields with field-level error text.
   - `Card` for grouped content.
   - `LoadingState`, `EmptyState`, `ErrorState` and `ErrorBanner` for state
@@ -130,16 +144,20 @@ uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
   - full-screen stack screens for focused work, except the approved routine creation sheet;
   - Expo Router `formSheet` routes for approved sheets (S2–S5, plus S1 when opened from Routine Detail);
   - in-app Paper dialogs only for destructive confirmations and brief
-    acknowledgements;
-  - snackbars for operation results.
+    acknowledgements.
 - S5 is the full-height routine creation sheet. It has no navigation-header back
-  button and places `Cancelar` and `Guardar` at the top.
+  button and places `Cancelar` and `Continuar` on either side of its title. It
+  collects the routine name and optional planning; it never renders an exercise
+  section or exercise list.
 - S1 is a route sheet from Routine Detail and the same embedded sheet during
-  routine creation so an unsaved draft is preserved. This is the only approved
-  embedded-sheet exception. Embedded S1 shows top `Cancelar`/`Guardar` actions,
-  chains a new blank entry after each save, and can be dragged down by its handle.
+  routine creation so the unsaved name and planning are preserved. This is the
+  only approved embedded-sheet exception. S1 places `Cancelar` and `Guardar` on
+  either side of its title. Saving the embedded first exercise creates the
+  routine and opens Routine Detail; `Cancelar` returns to S5. It never opens
+  another exercise form automatically. Embedded S1 covers S5 below the top safe
+  area and can be dragged down by its handle.
 - Do not use a centered Paper dialog for a multi-step task flow. If a web-only fallback is documented after technical validation, it reuses the same sheet content and actions and is recorded before implementation.
-- Dialogs use `Portal` + `Dialog`; operation results use `Snackbar`.
+- Dialogs use `Portal` + `Dialog`. When a dialog is opened from a native `formSheet`, host the portal inside that route so the dialog renders above the sheet.
 - Confirmation dialogs use the in-app Paper `Dialog` instead of platform
   alerts so the same interaction works on native and web.
 - Icons are Material Community Icons with text or accessibility labels nearby
@@ -171,17 +189,18 @@ uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
 - A one-time assignment is removed from the card's overflow menu
   (`Quitar de este día`). The action always asks for confirmation. When the
   routine also repeats on that weekday, the confirmation explains that the
-  weekly recurrence remains. The result is announced with a snackbar.
+  weekly recurrence remains. The card and calendar update immediately.
 - An empty selected date offers `Usar una rutina` as the primary action and
   `Crear rutina` as the secondary action, both with icons.
 - When routines are present, the section header keeps a compact `Añadir` action
   so the user can add another routine to the same date. The add action is not
   shown while the day is loading or in an error state.
-- Creating a routine starts it unscheduled. The creation sheet (S5) collects its
-  name and draft exercises and explains that it can be assigned later from Home;
-  it does not show recurring weekday selection or assign the selected date.
-  Saving without exercises opens S1 automatically, and saved exercises chain
-  until `Cancelar` returns to the draft.
+- Creating a routine collects its name and optional recurring weekdays
+  (Monday–Sunday) in S5. It does not show an exercise section or assign the
+  selected date. `Continuar` opens S1 for the first exercise; saving that
+  exercise creates the routine and opens Routine Detail. If no weekdays are
+  selected, the routine is saved as `Sin programar` and can be assigned later
+  from Home. Additional exercises are added from Routine Detail.
 - The assignment sheet lists existing routines and then asks how to schedule
   the chosen routine:
   - `Solo este día` for a one-time assignment.
@@ -198,21 +217,26 @@ uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
   sheet, including when the user has no routines yet.
 - Routine Detail separates `Se repite` from `Fechas puntuales`. One-time dates
   can be removed there with confirmation and never change weekly recurrence.
-  The result is announced with a snackbar.
-- Routine Detail actions are compact and live in the header: edit, plus an
-  overflow menu with duplicate and delete.
+  The detail updates immediately after removal.
+- Routine-level actions live on each Routines-list card: a copy icon opens S3
+  and a pencil icon opens the name editor. Tapping the rest of the card opens
+  Routine Detail. The name editor places `Guardar` in the navigation header,
+  has no Cancel action, and exposes deletion as a borderless destructive text
+  action at the bottom; planning remains in S4 and exercise editing in S1.
+  Routine Detail has no routine-level header actions.
 - S1 is the only exercise editor. It opens as a sheet from Routine Detail and as
   the same embedded sheet during routine creation; exercise editing is never a
-  full-screen flow. The creation variant keeps `Cancelar`/`Guardar` at the top.
+  full-screen flow. Both variants place `Cancelar`/`Guardar` on either side of
+  the title. Saving the embedded first exercise creates the routine and opens
+  Routine Detail; `Cancelar` returns to the S5 name and planning draft.
 - S4 edits recurring weekdays only. It is a bottom sheet and never changes
-  one-time dates. A snackbar confirms the update.
-- After duplicating a routine, the sheet closes, the user returns to the
-  originating screen and a snackbar names the target date and offers `Abrir
-  copia`. The copy is not opened automatically.
+  one-time dates.
+- After duplicating a routine, the sheet closes and the user returns to the
+  Routines list. The copy is not opened automatically.
 - Never use completed-workout visual language, such as checkmarks, completion
   counts or "done" labels, for scheduled routines.
 - Removing a one-time date never changes recurring weekdays. The UI explains
-  this distinction before the action and in the result message.
+  this distinction before the action.
 
 ## 6. Accessibility and Inclusivity
 
@@ -225,8 +249,8 @@ uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
   warm and expressive without assigning gender roles to training.
 - Move focus to the title of an opened sheet or dialog and restore focus to its
   trigger when it closes.
-- Announce operation results through visible snackbars or error banners; never
-  rely on color alone.
+- Present operation failures through inline error messages or error banners;
+  never rely on color alone.
 - Destructive actions require confirmation and clear labels.
 
 ## 7. Boundaries

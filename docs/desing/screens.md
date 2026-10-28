@@ -37,7 +37,7 @@ The greeting must not occupy most of the first viewport; the calendar follows it
 
 The training activity summary and progression suggestions are reserved for their approved features. Until Workout Records and Progression exist, do not render fake or empty activity data on Home.
 
-Creating a routine from Home produces an unscheduled routine; the selected date is not retained or assigned. Using an existing routine takes priority over creating one; `Crear rutina` remains available in the empty state and in the assignment sheet (S2).
+Creating a routine from Home opens S5 with its name and optional planning. The selected date is not retained or assigned as a one-time assignment; the routine appears on its chosen recurring weekdays or remains unscheduled until assigned. Using an existing routine takes priority over creating one; `Crear rutina` remains available in the empty state and in the assignment sheet (S2).
 
 ### Assigning an existing routine (sheet S2)
 
@@ -51,14 +51,14 @@ Rules:
 - The selected weekday is always included in a weekly repetition.
 - Existing recurring weekdays are shown as already scheduled and preserved; the flow only adds days.
 - If the routine is already planned for the selected date, the user can still open it to add other weekdays, but it must not appear twice on that date.
-- The sheet handles one routine at a time, returns the user to the day's routines after a successful save, and shows a visible confirmation through a snackbar.
+- The sheet handles one routine at a time and returns the user to the day's routines after a successful save.
 
 ### Routine cards
 
 Each card shows the routine name, its exercise count and a `Registrar mi entrenamiento` action.
 - Tapping the card opens Routine Detail.
 - No scheduling-source chips or `Planificada` labels; scheduling details live in Routine Detail.
-- A one-time assignment can be removed from the card's overflow menu (`Quitar de este día`). The action always requires confirmation. If the routine also repeats on that weekday, the confirmation explains that the weekly recurrence remains. After removal, the card updates immediately and a snackbar explains the result.
+- A one-time assignment can be removed from the card's overflow menu (`Quitar de este día`). The action always requires confirmation. If the routine also repeats on that weekday, the confirmation explains that the weekly recurrence remains. After removal, the card updates immediately.
 - Until Workout Records is implemented, `Registrar mi entrenamiento` shows a short `Próximamente` notice and creates no record.
 
 ## 2. Routines
@@ -70,20 +70,22 @@ Contains:
 - a primary `Nueva` action in the header and `Crear rutina` in the empty state;
 - access to the user's routines;
 - recurring weekday assignments;
-- access to routine details and editing;
+- access to routine details, name editing, duplication and deletion;
 - access to each routine's exercise configuration.
 
-Routine cards show the routine name, its exercise count and its recurring weekdays. A routine without recurring weekdays shows `Sin programar`; this label describes weekly recurrence, while any one-time dates appear in Routine Detail.
+Routine cards show the routine name, its exercise count and its recurring weekdays. A routine without recurring weekdays shows `Sin programar`; this label describes weekly recurrence, while any one-time dates appear in Routine Detail. Each card exposes duplicate and edit-name icon actions on the right. Tapping the card opens Routine Detail; the icon actions do not open it.
 
 A routine has a name, zero or more recurring weekdays and an ordered list of exercise entries.
 
 Each exercise entry belongs to one routine, is configured independently there, and has: exercise name, optional note, planned number of sets, target repetition range and planned external weight. Users create their own entries and name their own variations.
 
-A new routine starts with no recurring weekdays and no one-time assignments. The `Nueva` header action and every `Crear rutina` entry point open the routine creation sheet (S5). It collects the routine name and the draft exercise list, has no navigation-header back button, and places `Cancelar` and `Guardar` at the top. It can be dismissed by dragging down. If `Guardar` is pressed with a valid name and no exercises, S1 opens automatically; each saved exercise opens a blank S1 again. `Cancelar` in S1 stops the chain and returns to the routine draft, where `Guardar` persists the routine. The user schedules the routine afterward from the Home calendar. Editing a routine can still change its recurring weekdays.
+A new routine can start with zero or more recurring weekdays and no one-time assignments. The `Nueva` header action and every `Crear rutina` entry point open the routine creation sheet (S5). S5 first collects the routine name and optional planning (Monday–Sunday), with no exercise section, and has no navigation-header back button. It places `Cancelar` and `Continuar` on either side of the title and can be dismissed by dragging down. If no weekdays are selected, the routine will be saved as `Sin programar`. If `Continuar` is pressed with a valid name, S1 opens for the first exercise; the routine is not saved yet. Saving that exercise creates the routine with the selected weekdays and the exercise, closes S5 and opens Routine Detail. Additional exercises are added from Routine Detail. Cancelling or dismissing S1 returns to S5 with the name and weekdays intact; cancelling or dismissing S5 saves nothing. Routine names are edited from the routines list; planning is edited from `Se repite` (S4) and exercises from S1 in Routine Detail.
 
-**Duplicate (sheet S3):** asks for a target date and creates an independent routine named `<original name> COPIA` with the same exercise configuration. The copy has no recurring weekdays; its only scheduling is a one-time assignment for the chosen date. Workout history is not copied. After a successful duplication, the sheet closes, the user returns to the originating screen and a snackbar confirms the copy and offers `Abrir copia`.
+**Edit name:** the pencil icon on a routine card opens a dedicated screen that edits only the routine name. It never shows recurring weekdays or exercises. `Guardar` is a text action in the navigation header, next to the title. There is no Cancel action: the back action discards unsaved changes. `Eliminar rutina` is a borderless destructive text action at the bottom, matching exercise deletion. Saving changes only the name and returns to the routines list. Deletion requires explicit confirmation.
 
-**Delete:** requires explicit confirmation and permanently removes the routine's active configuration and its scheduling assignments. Saved workouts remain available. The result is announced with a snackbar on the Routines screen.
+**Duplicate (sheet S3):** the copy icon on a routine card asks for a target date and creates an independent routine named `<original name> COPIA` with the same exercise configuration. The copy has no recurring weekdays; its only scheduling is a one-time assignment for the chosen date. Workout history is not copied. After a successful duplication, the sheet closes and the user returns to the Routines screen. The copy is not opened automatically.
+
+**Delete:** the `Eliminar rutina` action at the bottom of the edit-name screen requires explicit confirmation and permanently removes the routine's active configuration and its scheduling assignments. Saved workouts remain available.
 
 ## 3. Routine Detail
 
@@ -93,19 +95,19 @@ Contains:
 - routine name;
 - planned summary: exercise count, total planned sets and total planned repetitions;
 - a scheduling section with two independent blocks:
-  - `Se repite`: recurring weekdays with a compact edit action (sheet S4);
-  - `Fechas puntuales`: one-time dates with a `Quitar` action per date; removal requires confirmation and never changes recurring weekdays;
+  - `Se repite`: recurring weekdays with a compact edit action (sheet S4); with weekdays it shows `Todos los…`, otherwise `Sin programar`;
+  - `Fechas puntuales`: one-time dates with a `Quitar` action per date; removal requires confirmation and never changes recurring weekdays; shows `Sin fechas puntuales` when there are none;
 - ordered exercise entries, each with planned sets, target repetition range and planned external weight;
 - `Añadir más ejercicios` action;
-- compact header actions: edit, plus an overflow menu with duplicate and delete.
+- no routine-level edit, duplicate or delete actions in the navigation header; those actions live on the Routines list.
 
-The total planned repetitions is calculated conservatively as planned sets multiplied by the minimum target repetitions of each exercise. Individual entries show their full repetition range. Removing a one-time date updates Routine Detail immediately and announces the result with a snackbar.
+The total planned repetitions is calculated conservatively as planned sets multiplied by the minimum target repetitions of each exercise. Individual entries show their full repetition range. Removing a one-time date updates Routine Detail immediately.
 
 **Exercise entries (sheet S1):**
 - `Añadir más ejercicios` opens S1 to add an entry.
 - Tapping an entry opens S1 prefilled to edit its name, optional note, planned sets, target repetition range and planned weight.
 - The edit mode offers removal, with explicit confirmation.
-- During routine creation, the same S1 sheet is embedded in the draft form so unsaved entries are preserved until the routine is saved. In that context it shows `Cancelar` at the top left and `Guardar` at the top right. Saving an entry opens another blank S1; `Cancelar` returns to the routine creation sheet. The embedded sheet is docked below the top safe area and can be closed by dragging its handle down.
+- During routine creation, S1 opens from S5 to collect the first exercise and is embedded so the unsaved routine name and planning are preserved. Its `Cancelar` and `Guardar` actions sit on either side of the title. Saving the first exercise creates the routine and opens Routine Detail; it never opens another exercise form automatically. `Cancelar` returns to S5 without discarding the name or weekdays. Embedded S1 covers S5 below the top safe area and can be closed by dragging its handle down.
 
 ## 4. Record Workout
 
@@ -196,10 +198,12 @@ Until Progress and Profile are implemented, their tabs show a consistent tempora
 - Open recent training activity and Workout History through `Ver historial`.
 
 **Rutinas**
-- Create or edit a routine.
+- Create a routine.
+- Edit a routine's name.
 - Open routine details.
 - Add, edit or remove exercise entries (S1).
 - Duplicate a routine to a chosen date (S3).
+- Delete a routine with confirmation.
 
 **Workout History**
 - Secondary stack screen opened from Home `Actividad`.
@@ -238,10 +242,11 @@ Only the sheets in the inventory exist. If the implementer believes another one 
 - Do not install `@gorhom/bottom-sheet` or any other bottom-sheet library. The only manual drag gesture is the embedded S1 handle, approved so the draft form can be dismissed like a native sheet. It is limited to the handle area and must not compete with the form's scroll gesture.
 - Before coding, check the Expo Router documentation for the installed SDK and confirm the options used: `sheetAllowedDetents`, `sheetGrabberVisible`, `sheetCornerRadius`.
 - The grabber is visible. Corner radius, colors, spacing and typography come from design-system tokens; nothing is hardcoded in the screen.
+- `SheetScaffold` owns the header, body and footer margins. Header actions align with body content horizontally, and iOS form-sheet headers reserve space above the title for the native grabber.
 - Dragging down dismisses route sheets and the embedded S1. No sheet has a navigation-header back button.
 - Multi-step sheets use an in-content `Volver` action; this is not a navigation back button.
 - Dismissing by dragging discards unsaved changes without confirmation; only the sheet's primary action saves.
-- After a successful save, the sheet closes and the user returns to the originating screen. S3 shows a snackbar with the copy name, its target date and `Abrir copia`; it never opens the copy automatically.
+- After a successful save, the sheet closes and the user returns to the originating screen. S3 never opens the copy automatically.
 - Do not use a centered dialog for a task flow. If `formSheet` cannot provide acceptable web behavior, the implementation may document a web-only fallback that reuses the same content and actions; it must be recorded before implementation.
 - **Recorded web fallback (2026-10-26):** Expo Router's native stack does not implement `formSheet` on web, where it would replace the origin with a full screen. Sheet routes therefore use `presentation: 'transparentModal'` on web and render the same sheet content and actions in a centered Paper dialog. iOS and Android continue to use `formSheet`.
 - **Web-only accessibility limitation (2026-10-26):** Paper's web dialog fallback does not expose a dialog role (`role="dialog"` or `role="alertdialog"`) or trap keyboard focus. This limitation is recorded for the web fallback only; V1 targets iOS and Android, where Paper's modal marks its content as modal for assistive technologies.
@@ -250,11 +255,11 @@ Only the sheets in the inventory exist. If the implementer believes another one 
 
 | ID | Origin | Trigger | Content | Detents |
 |----|--------|---------|---------|---------|
-| S1 | Routine Detail (route sheet); routine creation (embedded sheet) | `Añadir más ejercicios` (create) or tapping an entry (edit, prefilled) | Exercise name, optional note, planned sets, target repetition range, planned weight. In edit mode, a remove action confirmed with the in-app dialog. Creation uses top `Cancelar`/`Guardar` actions and chains new blank entries until cancelled. | `[0.6, 1]` |
+| S1 | Routine Detail (route sheet); routine creation (embedded sheet) | `Añadir más ejercicios` (create) or tapping an entry (edit, prefilled) | Exercise name, optional note, planned sets, target repetition range, planned weight. In edit mode, a remove action confirmed with the in-app dialog. `Cancelar` and `Guardar` sit on either side of the title. During creation, saving the first exercise creates the routine and opens Routine Detail; `Cancelar` returns to S5. | `[0.6, 1]` |
 | S2 | Home | `Usar una rutina` (date without routines) or `Añadir` (date with routines) | Step 1: choose a routine, with `Crear rutina` available. Step 2: `Solo este día` or `Repetir cada semana` with weekday selection. Rules are defined in Home. | `[0.6, 1]` |
-| S3 | Routine Detail | Duplicate action | Target date. Creates `<original name> COPIA` as defined in Routines. The target-date content scrolls on small screens. After saving, returns to the originating screen and shows the copy name, its target date and `Abrir copia` in a snackbar. | `fitToContents` |
-| S4 | Routine Detail | Edit recurring weekdays | Seven weekday selections. Saves only the routine's recurring weekdays and never changes one-time dates. A snackbar confirms the update. | `fitToContents` |
-| S5 | Home, Routines and `Crear rutina` in S2 | `Nueva` or `Crear rutina` | Routine name and draft exercise list with top `Cancelar`/`Guardar`. Saving without exercises opens S1 automatically. Creating a routine never assigns a date or weekday. | `[1]` |
+| S3 | Routines list | Duplicate icon on a routine card | Target date. Creates `<original name> COPIA` as defined in Routines. The target-date content scrolls on small screens. After saving, returns to Routines without opening the copy. | `fitToContents` |
+| S4 | Routine Detail | Edit recurring weekdays | Seven weekday selections. Saves only the routine's recurring weekdays and never changes one-time dates. | `fitToContents` |
+| S5 | Home, Routines and `Crear rutina` in S2 | `Nueva` or `Crear rutina` | Routine name and optional planning (Monday–Sunday) with `Cancelar`/`Continuar` on either side of the title; no exercise section. `Continuar` opens S1 for the first exercise; saving it creates the routine and opens Routine Detail. Creating a routine never assigns the selected date or a one-time assignment. | `[1]` |
 
 ### Acceptance criteria (all sheets)
 
@@ -264,9 +269,9 @@ Only the sheets in the inventory exist. If the implementer believes another one 
 - Opens in one tap from its trigger.
 - Uses only design-system tokens and shared components.
 - A successful save closes the sheet and returns to the originating screen.
-- S1 uses the same fields and validation from Routine Detail and routine creation; creation uses top actions and chains new entries, while Routine Detail uses footer actions.
-- S5 has no navigation-header back button, keeps `Guardar` at the top right and dismisses to the originating screen by dragging down.
-- Saving S5 with no exercises opens S1. Saving an exercise opens another blank S1. `Cancelar` in S1 returns to S5 without discarding the draft.
+- S1 uses the same fields, validation and title-flanking actions from Routine Detail and routine creation.
+- S5 has no navigation-header back button, keeps `Cancelar` and `Continuar` on either side of the title, and dismisses to the originating screen by dragging down.
+- `Continuar` in S5 with a valid name opens S1 for the first exercise. Saving that exercise creates the routine and opens Routine Detail; S5 never displays an exercise list or `Añadir otro`. `Cancelar` in S1 returns to S5 without discarding the name or weekdays.
 - Task flows never use a centered page dialog, except for a documented web-only fallback after technical validation; Paper dialogs are otherwise reserved for confirmations and brief acknowledgements.
 - TypeScript compiles without errors.
 
@@ -297,10 +302,10 @@ Resolved decisions:
 - Navigation uses four persistent bottom tabs: Inicio, Rutinas, Progreso and Perfil; secondary screens live in the stack above them.
 - Workout History opens from the Home `Actividad` section through `Ver historial`; it is not a bottom-tab destination.
 - S1–S5 are the only sheets. S1 is shared with routine creation through the approved embedded-draft exception; S5 is the approved full-height routine creation sheet.
-- S5 has no navigation-header back button, uses top `Cancelar`/`Guardar`, opens the first S1 automatically when saving a valid name without exercises, and chains a new blank S1 after each saved exercise. `Cancelar` in S1 returns to the S5 draft.
-- Embedded S1 is the only manually draggable sheet because it must preserve the S5 draft; it stays below the top safe area and dismisses from its handle.
+- S5 has no navigation-header back button and places `Cancelar`/`Continuar` on either side of its title. It collects only the routine name and optional planning. `Continuar` opens the first S1; saving that exercise creates the routine and opens Routine Detail. S5 never displays an exercise list, and `Cancelar` in S1 returns to the S5 draft.
+- Embedded S1 is the only manually draggable sheet because it must preserve the S5 name and planning draft; it covers S5 below the top safe area and dismisses from its handle.
 - Home keeps its current plan and scroll position while refreshing after a sheet or secondary screen closes.
 - Routine Detail shows both recurring weekdays and one-time dates, and one-time dates can be removed without changing recurrence.
-- Duplicating a routine returns to the originating screen; the snackbar names the target date and offers `Abrir copia` instead of opening the copy.
+- Duplicating a routine returns to the Routines screen and does not open the copy automatically.
 - Destructive confirmations use the in-app Paper dialog on native and web.
 - The Home greeting is `Hola` until Profile is implemented, then `Hola, <name>`.

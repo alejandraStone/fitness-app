@@ -30,7 +30,8 @@
 ### Phase 3 — Routine Management UI
 
 - Implement routine list and empty state.
-- Implement routine creation, details and editing.
+- Implement routine creation and details.
+- Implement a name-only routine editor and permanent deletion from the routine list.
 - Implement adding, editing and removing exercise entries while preserving their creation order. Each entry has a single optional note; there is no separate description field.
 - Implement routine duplication with a target-date selection and a copy named `<original name> COPIA`, plus permanent deletion with an in-app confirmation dialog that works on native and web.
 - Connect UI to application use cases; do not access SQLite directly from components.
@@ -41,9 +42,9 @@
 - Implement individual-date assignments.
 - Implement monthly calendar navigation and date selection.
 - Display the effective scheduled routines for the selected date without duplicates.
-- Support starting routine creation from Home without retaining or assigning the selected date; new routines start unscheduled.
+- Support starting routine creation from Home without retaining or assigning the selected date; creation collects the name and optional recurring weekdays before the first exercise.
 - Ensure cancelling creation does not persist the routine.
-- Present scheduling only through the date-assignment flow after creation.
+- Allow recurring weekdays during creation and later editing; keep one-time date assignments in the date-assignment flow after creation.
 
 ### Phase 5 — Verification
 

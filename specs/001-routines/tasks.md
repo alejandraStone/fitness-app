@@ -543,7 +543,7 @@ Approved decisions D1–D8 from the UX review. Implement tasks in order; T051 is
 
 **Verify:** Adding, editing and removing an exercise behaves consistently from both entry points; the routine draft is preserved; no task flow uses a full-screen exercise editor.
 
-**Status:** Completed (2026-10-26; refined 2026-10-27). Embedded S1 during creation preserves the unsaved draft, uses top `Cancelar`/`Guardar`, and chains a new blank entry after each save; route S1 from Routine Detail still adds, prefills/edits and removes an exercise with the shared confirmation. The old full-screen exercise screens and custom bottom modal are no longer in the primary flow. Web E2E and automated checks passed.
+**Status:** Completed (2026-10-26; refined 2026-10-27). Embedded S1 during creation preserves the unsaved draft, places `Cancelar`/`Guardar` on either side of the title, closes after saving and returns to S5; route S1 from Routine Detail still adds, prefills/edits and removes an exercise with the shared confirmation. The old full-screen exercise screens and custom bottom modal are no longer in the primary flow. The later manual-add refinement is tracked by T062.
 
 ### T056 — Show complete routine scheduling
 - Add an application query for a routine's one-time date assignments.
@@ -592,20 +592,94 @@ Approved decisions D1–D8 from the UX review. Implement tasks in order; T051 is
 
 **Verify:** Automated checks pass, the web flows complete without blocking defects, and native verification is recorded or explicitly remains open.
 
-**Status:** Automated and web verification complete (2026-10-27); native verification pending. `npm run typecheck`, `npm run lint`, `npm test -- --runInBand` (31 suites, 167 tests) and `npx expo export --platform web` passed. A 390×844 browser session completed the revised flow — S5 from Routines, Home and S2, automatic first S1, chained exercise entry, top actions, routine persistence, S3 with a non-default target date, copy detail and Home refresh — with no browser errors. Native iOS/Android verification remains pending; T029 stays open.
+**Status:** Automated and web verification complete (2026-10-27); native verification pending. `npm run typecheck`, `npm run lint`, `npm test -- --runInBand` (31 suites, 167 tests) and `npx expo export --platform web` passed. A 390×844 browser session completed the revised flow — S5 from Routines, Home and S2, automatic first S1, manual second exercise, title-flanking actions, routine persistence, S3 with a non-default target date, copy detail and Home refresh — with no browser errors. iPhone checks for the T061 scope were reported successful; Android verification remains pending and T029 stays open. T062 requires an iPhone retest.
 
 ### T061 — Refine routine creation, embedded S1 and Home stability
-- Present routine creation as the full-height S5 sheet with no navigation-header back button and top `Cancelar`/`Guardar` actions.
-- Open S1 automatically when `Guardar` is pressed with a valid name and no exercises; chain a new blank S1 after each saved exercise and return to S5 on `Cancelar`.
-- Show `Cancelar` at the top left and `Guardar` at the top right inside the creation S1 variant; remove the manual `Añadir` action from S5.
+- Present routine creation as the full-height S5 sheet with no navigation-header back button and `Cancelar`/`Guardar` actions (later moved to either side of the title in T062).
+- Open S1 automatically when `Guardar` is pressed with a valid name and no exercises. The original chained-entry behavior was superseded by T062.
+- Show `Cancelar`/`Guardar` in the creation S1 header. The later title-flanking and manual-add refinement is tracked by T062.
 - Dock embedded S1 below the top safe area and support drag-to-dismiss without competing with form scrolling.
 - Preserve Home data and scroll position while refreshing after a sheet or secondary screen closes.
 - Make the S3 target date read from the latest selection synchronously and name the target date in duplicate feedback.
 - Update `docs/desing/screens.md`, `docs/desing/design-system.md` and `specs/001-routines/spec.md` for S5 and the revised S1 behavior.
 
-**Verify:** S5 opens from Home, Routines and S2; has no `(tabs)` back label; can be cancelled or dragged down; opens S1 automatically after a valid name; chains exercises until `Cancelar`; persists the routine from the top `Guardar`; S1 stays below the notch and dismisses by dragging; Home remains static after closing sheets; S3 assigns the copy to the selected date and reports that date. Automated checks and the 390×844 web flow pass; native safe-area, drag and keyboard behavior require device verification.
+**Verify:** S5 opens from Home, Routines and S2; has no `(tabs)` back label; can be cancelled or dragged down; opens S1 automatically after a valid name; the original chaining behavior was replaced by T062; S1 stays below the notch and dismisses by dragging; Home remains static after closing sheets; S3 assigns the copy to the selected date and reports that date. Automated checks and the 390×844 web flow passed; native safe-area, drag and keyboard behavior require device verification.
 
-**Status:** In progress (2026-10-27). Implementation and automated/web verification complete: type checking, linting, 31 test suites / 167 tests and the web export pass; a 390×844 Playwright flow covered S5 from Routines, Home and S2, automatic and chained S1, routine persistence, S3 with a non-default target date and copy detail, plus browser-error checks. Native iPhone visual and gesture verification remains pending, including the reported Home displacement and embedded-S1 notch/drag behavior.
+**Status:** Completed (2026-10-27) after iPhone verification of Home stability, embedded-S1 notch clearance and drag dismissal, S5 presentation and duplicate assignment. Its exercise-chaining requirement was superseded by T062 after product review.
+
+### T062 — Return to S5 after each exercise and flank sheet titles
+
+- Place `Cancelar` and `Guardar` on either side of the sheet title in S5 and both S1 variants.
+- Make embedded S1 cover S5 from just below the top safe area instead of starting lower than the draft sheet.
+- Remove automatic exercise chaining: saving an exercise closes S1 and returns to S5 with the entry listed; `Cancelar` preserves the draft.
+- Keep the automatic first S1 when `Guardar` is pressed with a valid routine name and no exercises.
+- Show a compact manual `Añadir otro` action after the first exercise; keep it hidden while the draft is empty.
+- Update `docs/desing/screens.md`, `docs/desing/design-system.md` and `specs/001-routines/spec.md` for the revised S5/S1 behavior.
+
+**Verify:** S5 and S1 show readable titles with their actions on the title row; the automatic first S1 covers S5; saving the first exercise reveals S5 with the entry and no blank exercise form; `Añadir otro` opens a fresh S1 and saving returns to S5; Cancelar preserves the draft; routine `Guardar` persists. Automated checks, the mobile-viewport web flow and a native iPhone retest pass.
+
+**Status:** In progress (2026-10-27). Implementation and automated/web verification are complete: `npm run typecheck`, `npm run lint`, `npm test -- --runInBand` (31 suites, 167 tests) and `npx expo export --platform web` pass. The 390×844 web flow covers title-flanking actions in S5 and both S1 variants, automatic first S1, no automatic second form, manual `Añadir otro`, route-S1 add/edit, draft preservation, routine persistence, duplicate assignment and Home stability with no browser errors. Native iPhone retest of S1 coverage, title layout and the manual-add flow is pending.
+
+### T063 — Move planning into routine creation and save with the first exercise
+
+- Replace the S5 exercise draft with the routine name and optional Monday–Sunday planning.
+- Remove the exercise section, list, add actions and exercise feedback from S5.
+- Rename the S5 primary action to `Continuar`; open S1 for the first exercise without persisting the routine yet.
+- Save the first exercise together with the routine name and selected weekdays, then open Routine Detail.
+- Add further exercises from Routine Detail instead of returning to S5.
+- Update the create-routine use case to validate and persist recurring weekdays.
+- Update `docs/PRD.md`, `specs/001-routines/spec.md`, `docs/desing/screens.md`, `docs/desing/design-system.md`, `specs/001-routines/plan.md` and tests.
+- Supersedes the creation-only exercise-draft behavior from T050 and T062.
+
+**Verify:** S5 shows only the name and optional planning, with no exercise section or exercise feedback. `Continuar` validates the name and opens S1. Cancelling S1 preserves the name and weekdays; saving the first exercise creates the routine with those weekdays and opens Routine Detail. A routine with no weekdays is saved as `Sin programar`. Automated checks pass.
+
+**Status:** Completed (2026-10-28) for implementation and automated/web-build verification. `npm test -- --runInBand` passed with 31 suites and 170 tests; `npm run typecheck`, `npm run lint` and `npx expo export --platform web` passed. Native device verification of the creation flow remains pending.
+
+### T064 — Move routine-level actions to the routine list
+
+- Replace the routine-card chevron with duplicate and edit-name icon actions.
+- Reduce the routine edit route to a name-only editor with a header `Guardar` action and a borderless destructive text action for deletion at the bottom. The back action discards unsaved changes, so there is no Cancel action.
+- Remove routine-level edit, duplicate and delete actions from the Routine Detail header.
+- Keep recurring-day editing in S4 and exercise editing in S1.
+- Update `docs/desing/screens.md`, `docs/desing/design-system.md`, `specs/001-routines/spec.md`, `specs/001-routines/plan.md` and tests.
+- Supersedes the Routine Detail header-action placement from T058.
+
+**Verify:** Tapping a routine card opens Routine Detail; the copy icon opens S3; the pencil icon opens a name-only editor; `Guardar` in the header saves the name and back discards unsaved changes; deletion uses the same borderless text action as exercise deletion and requires confirmation; Routine Detail has no routine-level header actions.
+
+**Status:** In progress (2026-10-28; header-save refinement). Implementation and automated checks were complete at that point: `npm run typecheck`, `npm run lint`, `npm test -- --runInBand` (31 suites, 171 tests) and `npx expo export --platform web` passed. Manual verification of the card action taps, header save/back behavior, deletion flow and action-free Routine Detail header is pending. Success snackbar feedback was subsequently removed by T065.
+
+### T065 — Remove success snackbar feedback
+
+- Remove the global `FeedbackProvider` and every `showMessage` call.
+- Remove the success-result copy helpers and tests that only covered snackbar messages.
+- Keep loading, empty, validation, inline error and destructive-confirmation feedback.
+- Let successful operations update the visible UI and return to the originating screen without a snackbar.
+- Update `docs/desing/screens.md` and `docs/desing/design-system.md`; success feedback requirements from T057 are superseded.
+
+**Verify:** No `showMessage`, `useFeedback`, `FeedbackProvider` or `Snackbar` usage remains. Creating, renaming, duplicating, scheduling, removing an assignment, updating weekdays, adding/editing/removing an exercise and deleting a routine complete without snackbars, while errors remain inline and destructive actions keep their confirmation. Automated checks pass.
+
+**Status:** Completed (2026-10-28). The success snackbars and their provider were removed; operations still navigate and update the visible state. `npm run typecheck`, `npm run lint`, `npm test -- --runInBand` (31 suites, 167 tests) and `npx expo export --platform web` pass.
+
+### T066 — Simplify weekly scheduling copy in S2
+
+- Remove the redundant radio helpers, the `Días de la semana` heading, the locked-days note and the green result summary.
+- Keep one conditional explanation above the weekday selector and the disabled reason for `Solo este día`.
+- Cover the no-weekdays, existing-weekdays, already-recurring and all-days cases with concise Spanish copy.
+
+**Verify:** The weekly option shows one explanation and the weekday selector; the copy states what will happen without repeating the selected days; no heading, green summary or extra helper remains.
+
+**Status:** In progress (2026-10-28; awaiting visual verification). `npm run typecheck`, `npm run lint`, `npm test -- --runInBand` (31 suites, 167 tests) and `npx expo export --platform web` pass.
+
+### T067 — Unify sheet header spacing
+
+- Centralize header and body horizontal spacing in `SheetScaffold` so title-flanking actions align with content instead of sitting close to the sheet edges.
+- Align the title-only and action-row header vertical spacing.
+- Reserve additional top space on iOS form sheets so the title does not collide with the native grabber; keep embedded S1 and the web dialog fallback on their existing handle/dialog spacing.
+- Document the shared sheet spacing contract in the design system.
+
+**Verify:** The `Cancelar`/`Guardar` actions in S1 align horizontally with the sheet body, and route-sheet titles remain clear of the native grabber. S2–S5 and embedded S1 use the same scaffold without sheet-specific header margins. Automated checks pass.
+
+**Status:** In progress (2026-10-28; awaiting native visual verification). `npm run typecheck`, `npm run lint`, `npm test -- --runInBand` (31 suites, 167 tests) and `npx expo export --platform web` pass. Lint reports one pre-existing unused-import warning in `MonthlyCalendar.tsx`.
 
 ## Deferred Work
 

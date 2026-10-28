@@ -110,7 +110,7 @@ Scheduling has two independent mechanisms:
 Requirements:
 - A routine appears only once on a date, even if both scheduling mechanisms coincide.
 - Multiple different routines can be scheduled on the same date.
-- Creating a routine does not schedule it. New routines start without recurring weekdays or one-time assignments; the user can assign them to dates or weekdays later from the calendar.
+- Creating a routine does not assign a specific date. The user can select zero or more recurring weekdays during creation; one-time assignments and additional weekdays can be added later from the calendar.
 - Scheduling a routine does not create a workout or imply that it was performed.
 - The calendar displays scheduled routines separately from saved workout history.
 - A workout is recorded against the date selected by the user when starting the recording process.
@@ -277,7 +277,7 @@ Requirements:
 28. Personal records are calculated from actual saved performance, including repetition records for exercises without external load.
 29. Core features work without an internet connection.
 30. Saved data persists after the application is closed and reopened.
-31. Creating a routine starts it unscheduled; the user can assign it to a date or weekday later from the calendar.
+31. Creating a routine lets the user choose zero or more recurring weekdays before saving; the selected Home date is not assigned automatically. Routines without weekdays remain unscheduled and can be assigned later from the calendar.
 32. Duplicating a routine asks the user for a date, creates an independent copy named `<original name> COPIA` with the original exercise configuration, assigns it to the chosen date, and does not inherit recurring weekdays or one-time assignments.
 33. Every user-facing message is presented in Spanish.
 
