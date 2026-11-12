@@ -31,11 +31,11 @@ Contains:
 - when the date has no routines: primary action `Usar una rutina` and secondary action `Crear rutina`;
 - when the date already has routines: compact `Añadir` action in the section header;
 - compact `Actividad` summary with the number of saved workouts in the visible month and access to Workout History through `Ver historial`;
-- relevant progression suggestions when the Progression feature is delivered; no placeholder is shown before then.
+- no progression suggestions; recommendations currently appear only in Workout Detail, and their future Home presentation remains a product decision.
 
 The greeting must not occupy most of the first viewport; the calendar follows it directly. It contains no marketing tagline, long subtitle or `Rutinas` shortcut; the bottom tab owns navigation to Routines. Until the Profile feature exists, the application must not fake or hardcode a user name.
 
-The `Actividad` section is calculated from saved workouts only. It shows the visible month's saved-workout count, a Spanish empty message when the month has none, and keeps `Ver historial` available in both states. Scheduled routines, planned sessions, planned targets and calendar days never count as completed training. Progression suggestions remain reserved for the Progression feature; Home does not render fake or empty progression data.
+The `Actividad` section is calculated from saved workouts only. It shows the visible month's saved-workout count, a Spanish empty message when the month has none, and keeps `Ver historial` available in both states. Scheduled routines, planned sessions, planned targets and calendar days never count as completed training. Home does not render progression suggestions, fake data or empty progression placeholders.
 
 The calendar distinguishes scheduled routines from saved workouts with different marker shapes. A date can show both states. Saved workouts keep their marker even when their source routine is no longer scheduled or has been deleted. Calendar accessibility labels include both the routine count and the saved-workout count.
 
@@ -144,9 +144,22 @@ Contains:
 - exercise notes and planned sets, target repetition range and planned weight from the snapshot;
 - actual weight and repetitions for every recorded set;
 - summary of exercise count, total sets and total repetitions;
-- action to edit the recorded performance.
+- action to edit the recorded performance;
+- pending progression recommendations when they exist.
 
-The detail stays readable if the source routine was edited or permanently deleted, because every displayed value comes from the saved snapshot. The workout date is not editable and no delete action is exposed. Progression suggestions and results belong to the Progression feature and are not shown as placeholders. The screen reloads on focus so edits appear immediately, and provides Spanish loading, not-found and retryable error states.
+The detail stays readable if the source routine was edited or permanently deleted, because every displayed value comes from the saved snapshot. The workout date is not editable and no delete action is exposed. The screen reloads on focus so edits and routine changes appear immediately, and provides Spanish loading, not-found and retryable error states.
+
+### Progression recommendations
+
+When pending recommendations exist, one compact `Progresión` card appears between the workout summary and `Ejercicios`.
+
+- The card explains that the maximum was reached and that the user may consider increasing the weight. It never changes the planned weight automatically or prescribes a specific increment.
+- Each recommendation shows the exercise name, the actual repetitions and the snapshot's maximum target.
+- `Revisar peso` opens Routine Detail so the user can review and change the planned weight manually.
+- `Mantener peso` stores the decision for that saved exercise, removes the row immediately and survives restarts.
+- The card is hidden when no recommendation is pending and while recommendations refresh. It also stays hidden when the source routine was deleted, the current planned weight differs from the snapshot, the routine has no unique matching exercise, a newer session exists or a keep-weight decision was already made.
+- A decision failure keeps the row visible, shows the inline message `No se pudo guardar tu decisión. Inténtalo de nuevo.` and allows retry. No success snackbar, modal or badge is used.
+- Recommendations are not shown on Home, Workout History, Record Workout or Routine Detail.
 
 ### Editing a saved workout
 
@@ -172,7 +185,7 @@ Selecting an item opens Workout Detail, where the user can review and edit it. O
 
 Main screen for reviewing training progression over time.
 
-Metrics, charts, summaries and layout are pending product decisions (see Pending Decisions). It uses saved workouts as its only source of performance; scheduled routines and planned targets are never counted as performance. Detailed requirements must be defined before full implementation, but this does not block unrelated features.
+Metrics, charts, summaries and layout are pending product decisions (see Pending Decisions). The presentation of progression recommendations on Progress is also pending; Workout Detail is currently the only screen that shows them. It uses saved workouts as its only source of performance; scheduled routines and planned targets are never counted as performance. Detailed requirements must be defined before full implementation, but this does not block unrelated features.
 
 ## 8. Exercise Progress
 

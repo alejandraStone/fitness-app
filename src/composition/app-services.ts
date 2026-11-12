@@ -1,4 +1,8 @@
 import {
+  createProgressionServices,
+  type ProgressionServices,
+} from './progression-services';
+import {
   createRoutineServices,
   type RoutineServices,
 } from './routine-services';
@@ -12,6 +16,7 @@ import { openAppDatabase } from '../data/database/expo-sqlite-database';
 export interface AppServices {
   routines: RoutineServices;
   workouts: WorkoutServices;
+  progression: ProgressionServices;
 }
 
 let servicesPromise: Promise<AppServices> | null = null;
@@ -39,5 +44,6 @@ async function createAppServices(): Promise<AppServices> {
   return {
     routines: createRoutineServices(database),
     workouts: createWorkoutServices(database),
+    progression: createProgressionServices(database),
   };
 }

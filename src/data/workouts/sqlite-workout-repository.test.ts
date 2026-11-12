@@ -499,6 +499,53 @@ describe('SqliteWorkoutRepository', () => {
     ).resolves.toEqual([]);
   });
 
+  it('returns every complete workout ordered by date, save timestamp and identifier', async () => {
+    const older = createAggregateWorkout(
+      'older',
+      '2026-10-30',
+      '2026-10-30T10:00:00.000Z',
+      [[6], [7]],
+    );
+    const sameDayEarly = createAggregateWorkout(
+      'same-day-early',
+      '2026-11-01',
+      '2026-11-01T09:00:00.000Z',
+      [[8]],
+    );
+    const sameDayLate = createAggregateWorkout(
+      'same-day-late',
+      '2026-11-01',
+      '2026-11-01T12:00:00.000Z',
+      [[9]],
+    );
+    const higherId = createAggregateWorkout(
+      'z-higher-id',
+      '2026-11-01',
+      '2026-11-01T12:00:00.000Z',
+      [[10]],
+    );
+    const lowerId = createAggregateWorkout(
+      'a-lower-id',
+      '2026-11-01',
+      '2026-11-01T12:00:00.000Z',
+      [[11]],
+    );
+
+    await repository.create(older);
+    await repository.create(sameDayEarly);
+    await repository.create(sameDayLate);
+    await repository.create(higherId);
+    await repository.create(lowerId);
+
+    await expect(repository.findAll()).resolves.toEqual([
+      lowerId,
+      sameDayLate,
+      higherId,
+      sameDayEarly,
+      older,
+    ]);
+  });
+
   it('returns previous-performance candidates before the selected date with optional exclusion', async () => {
     const early = createAggregateWorkout(
       'early',

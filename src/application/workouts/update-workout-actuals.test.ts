@@ -71,6 +71,9 @@ function createRepository(
     async create(): Promise<void> {
       throw new Error('Not used in this test.');
     },
+    async findAll(): Promise<Workout[]> {
+      throw new Error('Not used in this test.');
+    },
     async findById(id: string): Promise<Workout | null> {
       if (readError !== undefined) {
         throw readError;

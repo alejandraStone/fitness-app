@@ -225,6 +225,9 @@ function createWorkoutRepository(
     async create(): Promise<void> {
       throw new Error('Not used in this test.');
     },
+    async findAll(): Promise<Workout[]> {
+      throw new Error('Not used in this test.');
+    },
     async findById(): Promise<Workout | null> {
       throw new Error('Not used in this test.');
     },

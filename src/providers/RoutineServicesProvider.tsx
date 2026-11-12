@@ -10,6 +10,7 @@ import {
   getAppServices,
   type AppServices,
 } from '../composition/app-services';
+import type { ProgressionServices } from '../composition/progression-services';
 import type { RoutineServices } from '../composition/routine-services';
 import type { WorkoutServices } from '../composition/workout-services';
 import { ErrorState } from '../shared/ui/ErrorState';
@@ -92,6 +93,11 @@ export function useRoutineServices(): RoutineServices {
 /** Returns the workout application services; only valid inside the provider. */
 export function useWorkoutServices(): WorkoutServices {
   return useAppServices().workouts;
+}
+
+/** Returns the progression application services; only valid inside the provider. */
+export function useProgressionServices(): ProgressionServices {
+  return useAppServices().progression;
 }
 
 function useAppServices(): AppServices {

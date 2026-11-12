@@ -164,6 +164,18 @@ export const MIGRATIONS: readonly Migration[] = [
         ON workouts (date DESC, saved_at DESC);
     `,
   },
+  {
+    version: 4,
+    name: 'add_progression_keep_weight_decisions',
+    up: `
+      CREATE TABLE IF NOT EXISTS progression_keep_weight_decisions (
+        workout_exercise_id TEXT PRIMARY KEY NOT NULL,
+        decided_at TEXT NOT NULL,
+        FOREIGN KEY (workout_exercise_id)
+          REFERENCES workout_exercises(id) ON DELETE CASCADE
+      );
+    `,
+  },
 ];
 
 /**

@@ -7,6 +7,7 @@ import { NodeSqliteDatabase } from './testing/node-sqlite-database';
 import { openTestDatabase } from './testing/test-database';
 
 const EXPECTED_TABLES = [
+  'progression_keep_weight_decisions',
   'routine_assignments',
   'routine_exercises',
   'routine_schedules',
@@ -50,6 +51,25 @@ describe('database migrations', () => {
         "SELECT name FROM pragma_table_info('workouts')",
       );
       expect(workoutColumns.map((column) => column.name)).toContain('saved_at');
+
+      const decisionColumns = await database.getAllAsync<{ name: string }>(
+        "SELECT name FROM pragma_table_info('progression_keep_weight_decisions')",
+      );
+      expect(decisionColumns.map((column) => column.name)).toEqual([
+        'workout_exercise_id',
+        'decided_at',
+      ]);
+
+      const decisionForeignKeys = await database.getAllAsync<
+        Record<string, unknown>
+      >("PRAGMA foreign_key_list('progression_keep_weight_decisions')");
+      expect(decisionForeignKeys).toHaveLength(1);
+      expect(decisionForeignKeys[0]).toMatchObject({
+        table: 'workout_exercises',
+        from: 'workout_exercise_id',
+        to: 'id',
+        on_delete: 'CASCADE',
+      });
 
       const version = await database.getFirstAsync<{ user_version: number }>(
         'PRAGMA user_version',
@@ -110,6 +130,39 @@ describe('database migrations', () => {
         to: 'id',
         on_delete: 'CASCADE',
       });
+    } finally {
+      await database.closeAsync();
+    }
+  });
+
+  it('cascades keep-weight decisions when their workout exercise is deleted', async () => {
+    const database = await openTestDatabase();
+
+    try {
+      await database.runAsync(
+        `INSERT INTO workouts (id, routine_id, date, routine_name_snapshot)
+         VALUES ('workout-1', 'routine-1', '2026-11-02', 'Lower A')`,
+      );
+      await database.runAsync(
+        `INSERT INTO workout_exercises (
+           id, workout_id, name_snapshot, position, planned_sets,
+           planned_reps_min, planned_reps_max, planned_weight_kg
+         ) VALUES ('workout-exercise-1', 'workout-1', 'Back Squat', 0, 1, 8, 10, 75)`,
+      );
+      await database.runAsync(
+        `INSERT INTO progression_keep_weight_decisions (
+           workout_exercise_id, decided_at
+         ) VALUES ('workout-exercise-1', '2026-11-02T18:00:00.000Z')`,
+      );
+
+      await database.runAsync('DELETE FROM workouts WHERE id = ?', [
+        'workout-1',
+      ]);
+
+      const decisions = await database.getAllAsync<{
+        workout_exercise_id: string;
+      }>('SELECT workout_exercise_id FROM progression_keep_weight_decisions');
+      expect(decisions).toEqual([]);
     } finally {
       await database.closeAsync();
     }
@@ -192,7 +245,7 @@ describe('database migrations', () => {
       const version = await database.getFirstAsync<{ user_version: number }>(
         'PRAGMA user_version',
       );
-      expect(version?.user_version).toBe(3);
+      expect(version?.user_version).toBe(4);
 
       const exercises = await database.getAllAsync<{
         id: string;

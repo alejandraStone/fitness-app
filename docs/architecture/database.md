@@ -241,6 +241,23 @@ Constraint:
 UNIQUE (workout_exercise_id, set_number)
 ```
 
+### 3.9 ProgressionKeepWeightDecision
+
+Records the user's explicit decision to keep an exercise's current planned weight.
+
+```text
+ProgressionKeepWeightDecision
+├── workout_exercise_id
+└── decided_at
+```
+
+- `workout_exercise_id`: primary key and required reference to `WorkoutExercise`.
+- `decided_at`: ISO timestamp of the decision.
+- The row itself represents a keep-weight decision; no decision-type column is needed.
+- A repeated decision keeps the original row and timestamp.
+- Pending recommendations are never stored in this table. They remain derived values.
+- Deleting the workout exercise cascades to its keep-weight decision.
+
 ## 4. Relationships and Integrity
 
 ```text
@@ -253,7 +270,8 @@ Routine
 
 Workout
 └── 1:N WorkoutExercise
-      └── 1:N Set
+      ├── 1:N Set
+      └── 0:1 ProgressionKeepWeightDecision
 ```
 
 `Workout.routine_id` stores the source routine ID as historical metadata without a foreign key to `Routine`.
@@ -271,6 +289,7 @@ Required invariants:
 9. At most one saved workout exists per routine and date.
 10. Derived metrics are consistent with saved workout data.
 11. Local persistence preserves data across application restarts.
+12. At most one keep-weight decision exists per workout exercise.
 
 Use SQLite foreign keys and domain validation for the relationships and constraints they can enforce. Multi-record operations, including saving a workout and its child records, must use transactions to prevent partially persisted records.
 
@@ -288,6 +307,7 @@ The non-empty routine invariant must be validated by the application when saving
 | Workout | No user-facing deletion in V1. |
 | WorkoutExercise | Cascade-delete only if its parent workout is deleted through an authorized internal operation or future approved feature. |
 | Set | Cascade-delete with its workout exercise. |
+| ProgressionKeepWeightDecision | Cascade-delete with its workout exercise. |
 
 ### Routine deletion
 
@@ -313,11 +333,13 @@ V1 does not expose a user-facing option to delete saved workouts. Editing a save
 
 The schema may use cascading relationships from `Workout` to `WorkoutExercise` and from `WorkoutExercise` to `Set` to maintain referential integrity if a workout is deleted through an authorized internal operation or a future approved feature. Such deletion is not part of V1's user-facing functionality.
 
-Editing saved workout data must update affected charts, progression recommendations, and personal records.
+Editing saved workout data must update affected charts, progression recommendations, and personal records. A keep-weight decision remains stored when actual set values are edited because the decision is keyed by the stable workout exercise identifier, not by its recorded performance.
 
 ## 6. Progression and Derived Data
 
-V1 does not require persisted tables for progression charts, recommendations, or personal records. These are derived from saved workout data unless a future requirement justifies persistence.
+V1 does not persist progression charts, recommendations, or personal records. These are derived from saved workout data unless a future requirement justifies persistence.
+
+The only persisted progression state is the explicit keep-weight decision in `progression_keep_weight_decisions`. It suppresses the pending recommendation for one saved workout exercise without changing the routine or the historical snapshot. Recommendations remain derived and are recalculated whenever the saved workouts or the current routine change.
 
 Source data:
 - `Workout.date`: session date.
@@ -344,6 +366,8 @@ Session volume = Σ (weight_kg × reps)
 ```
 
 For exercises without external load, external-load volume is unavailable as a meaningful measure and must not be displayed as zero in a way that implies no training occurred.
+
+Progression recommendations evaluate the latest saved session per normalized exercise name. They require every planned set to reach the snapshot's maximum repetition target, the source routine to exist, exactly one current routine exercise with the same normalized name and the same planned weight, and no keep-weight decision. Duplicate or ambiguous matches never produce a recommendation.
 
 The progression specification defines exact comparison, tie-breaking, and edge-case rules.
 

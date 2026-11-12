@@ -1,9 +1,14 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
-import type { Workout } from '../../../domain/workouts';
+import type { ProgressionRecommendation } from '../../../domain/progression';
+import type { Workout, WorkoutExerciseId } from '../../../domain/workouts';
+import { ProgressionRecommendationCard } from '../../../features/progression';
 import { WorkoutDetailView } from '../../../features/workout-detail';
-import { useWorkoutServices } from '../../../providers/RoutineServicesProvider';
+import {
+  useProgressionServices,
+  useWorkoutServices,
+} from '../../../providers/RoutineServicesProvider';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorState } from '../../../shared/ui/ErrorState';
 import { LoadingState } from '../../../shared/ui/LoadingState';
@@ -12,6 +17,8 @@ import { Screen } from '../../../shared/ui/Screen';
 type LoadStatus = 'loading' | 'ready' | 'notFound' | 'error';
 
 const LOAD_ERROR = 'No se pudo cargar el entrenamiento.';
+const DECISION_ERROR =
+  'No se pudo guardar tu decisión. Inténtalo de nuevo.';
 
 /**
  * Route for a saved workout's historical record.
@@ -23,10 +30,18 @@ const LOAD_ERROR = 'No se pudo cargar el entrenamiento.';
 export default function WorkoutDetailScreen() {
   const router = useRouter();
   const services = useWorkoutServices();
+  const progressionServices = useProgressionServices();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [status, setStatus] = useState<LoadStatus>('loading');
   const [errorMessage, setErrorMessage] = useState(LOAD_ERROR);
+  const [recommendations, setRecommendations] = useState<
+    ProgressionRecommendation[]
+  >([]);
+  const [savingWorkoutExerciseId, setSavingWorkoutExerciseId] =
+    useState<WorkoutExerciseId | null>(null);
+  const [decisionError, setDecisionError] = useState<string | null>(null);
+  const progressionRequest = useRef(0);
 
   const loadWorkout = useCallback(async () => {
     if (id === undefined) {
@@ -58,10 +73,68 @@ export default function WorkoutDetailScreen() {
     }
   }, [id, services]);
 
+  const loadProgression = useCallback(async () => {
+    const requestId = progressionRequest.current + 1;
+    progressionRequest.current = requestId;
+    setRecommendations([]);
+    setDecisionError(null);
+
+    if (id === undefined) {
+      return;
+    }
+
+    try {
+      const result = await progressionServices.getWorkoutProgression(id);
+      if (progressionRequest.current !== requestId) {
+        return;
+      }
+
+      setRecommendations(result.ok ? result.recommendations : []);
+    } catch {
+      if (progressionRequest.current === requestId) {
+        setRecommendations([]);
+      }
+    }
+  }, [id, progressionServices]);
+
+  const keepWeight = useCallback(
+    async (workoutExerciseId: WorkoutExerciseId) => {
+      if (savingWorkoutExerciseId !== null) {
+        return;
+      }
+
+      setSavingWorkoutExerciseId(workoutExerciseId);
+      setDecisionError(null);
+
+      try {
+        const result =
+          await progressionServices.keepCurrentWeight(workoutExerciseId);
+
+        if (result.ok) {
+          setRecommendations((current) =>
+            current.filter(
+              (recommendation) =>
+                recommendation.workoutExerciseId !== workoutExerciseId,
+            ),
+          );
+          return;
+        }
+
+        setDecisionError(result.errors[0]?.message ?? DECISION_ERROR);
+      } catch {
+        setDecisionError(DECISION_ERROR);
+      } finally {
+        setSavingWorkoutExerciseId(null);
+      }
+    },
+    [progressionServices, savingWorkoutExerciseId],
+  );
+
   useFocusEffect(
     useCallback(() => {
       void loadWorkout();
-    }, [loadWorkout]),
+      void loadProgression();
+    }, [loadProgression, loadWorkout]),
   );
 
   const leave = useCallback(() => {
@@ -115,6 +188,20 @@ export default function WorkoutDetailScreen() {
             params: { id: workout.id },
           });
         }}
+        progressionCard={
+          <ProgressionRecommendationCard
+            errorMessage={decisionError}
+            onKeepWeight={keepWeight}
+            onReviewWeight={() => {
+              router.push({
+                pathname: '/routines/[id]',
+                params: { id: workout.routineId },
+              });
+            }}
+            recommendations={recommendations}
+            savingWorkoutExerciseId={savingWorkoutExerciseId}
+          />
+        }
         workout={workout}
       />
     </Screen>

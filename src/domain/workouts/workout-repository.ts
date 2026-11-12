@@ -32,6 +32,12 @@ export interface WorkoutRepository {
    */
   create(workout: Workout): Promise<void>;
 
+  /**
+   * Returns every complete saved workout with ordered exercises and sets,
+   * newest first by workout date, save timestamp and identifier.
+   */
+  findAll(): Promise<Workout[]>;
+
   /** Returns the complete saved workout, or `null` when it does not exist. */
   findById(id: WorkoutId): Promise<Workout | null>;
 

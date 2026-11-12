@@ -143,7 +143,10 @@ function findMatchingExercise(
   return selected;
 }
 
-function isMoreRecentWorkout(candidate: Workout, current: Workout): boolean {
+export function isMoreRecentWorkout(
+  candidate: Workout,
+  current: Workout,
+): boolean {
   if (candidate.date !== current.date) {
     return candidate.date > current.date;
   }

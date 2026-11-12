@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 
@@ -14,15 +15,25 @@ import { colors, spacing } from '../../shared/ui/theme';
 export interface WorkoutDetailViewProps {
   workout: Workout;
   onEdit: () => void;
+  /**
+   * Optional progression card composed by the route. The workout feature does
+   * not depend on the progression feature directly.
+   */
+  progressionCard?: ReactNode;
 }
 
 /**
  * Read-only historical record of one saved workout.
  *
  * Everything shown comes from the persisted snapshot and actual sets. No
- * delete, date-editing or progression placeholder is rendered here.
+ * delete or date-editing action is rendered here. The optional progression
+ * card is provided by the route and appears between the summary and exercises.
  */
-export function WorkoutDetailView({ workout, onEdit }: WorkoutDetailViewProps) {
+export function WorkoutDetailView({
+  workout,
+  onEdit,
+  progressionCard,
+}: WorkoutDetailViewProps) {
   const summary = summarizeWorkout(workout);
   const date = formatWorkoutDate(workout.date);
 
@@ -48,6 +59,8 @@ export function WorkoutDetailView({ workout, onEdit }: WorkoutDetailViewProps) {
           style={styles.editButton}
         />
       </Card>
+
+      {progressionCard}
 
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.sectionTitle} variant="titleLarge">

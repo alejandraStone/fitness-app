@@ -126,6 +126,15 @@ export class SqliteWorkoutRepository implements WorkoutRepository {
     }
   }
 
+  async findAll(): Promise<Workout[]> {
+    const rows = await this.database.getAllAsync<WorkoutRow>(
+      `SELECT ${WORKOUT_COLUMNS} FROM workouts
+       ORDER BY date DESC, saved_at DESC, id ASC`,
+    );
+
+    return this.readWorkouts(rows);
+  }
+
   async findById(id: WorkoutId): Promise<Workout | null> {
     const row = await this.database.getFirstAsync<WorkoutRow>(
       `SELECT ${WORKOUT_COLUMNS} FROM workouts WHERE id = ?`,
@@ -182,12 +191,7 @@ export class SqliteWorkoutRepository implements WorkoutRepository {
             [selectedDate, excludeWorkoutId],
           );
 
-    const workouts: Workout[] = [];
-    for (const row of rows) {
-      workouts.push(await this.readWorkout(row));
-    }
-
-    return workouts;
+    return this.readWorkouts(rows);
   }
 
   async updateActualSets(workout: Workout): Promise<void> {
@@ -266,6 +270,15 @@ export class SqliteWorkoutRepository implements WorkoutRepository {
     );
 
     return rows.map(mapSummaryRow);
+  }
+
+  private async readWorkouts(rows: readonly WorkoutRow[]): Promise<Workout[]> {
+    const workouts: Workout[] = [];
+    for (const row of rows) {
+      workouts.push(await this.readWorkout(row));
+    }
+
+    return workouts;
   }
 
   private async readWorkout(row: WorkoutRow): Promise<Workout> {

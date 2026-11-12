@@ -256,7 +256,15 @@ uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
   remove or skip exercises or sets.
 - Workout Detail presents the saved snapshot and actual sets with the shared
   workout exercise and statistics components. It exposes an edit action but no
-  delete action, editable date or progression placeholder.
+  delete action or editable date.
+- Pending progression recommendations appear in one compact card between the
+  workout summary and `Ejercicios`. The card uses the sage support surface
+  (`colors.sageSoft`) and a sage `trending-up` icon, titles itself `Progresión`,
+  and lists one advisory row per exercise with its repetitions and target.
+  `Revisar peso` is the primary card action; `Mantener peso` is a secondary
+  action per row. The card is hidden when empty or refreshing, uses no warning
+  or destructive colors, and shows persistence failures inline. No modal,
+  snackbar, badge or success confirmation is used.
 - Workout History groups saved workouts by month, newest first, and shows the
   date, historical routine name and `N ejercicios · N series`. It never includes
   scheduled routines that have not been saved.
