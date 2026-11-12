@@ -22,6 +22,8 @@ const EXPECTED_INDEXES = [
   'idx_routine_schedules_routine_id',
   'idx_sets_workout_exercise_id',
   'idx_workout_exercises_workout_id',
+  'idx_workouts_date_saved_at',
+  'idx_workouts_routine_date_unique',
   'idx_workouts_routine_id',
 ];
 
@@ -43,6 +45,11 @@ describe('database migrations', () => {
          ORDER BY name`,
       );
       expect(indexes.map((index) => index.name)).toEqual(EXPECTED_INDEXES);
+
+      const workoutColumns = await database.getAllAsync<{ name: string }>(
+        "SELECT name FROM pragma_table_info('workouts')",
+      );
+      expect(workoutColumns.map((column) => column.name)).toContain('saved_at');
 
       const version = await database.getFirstAsync<{ user_version: number }>(
         'PRAGMA user_version',
@@ -185,7 +192,7 @@ describe('database migrations', () => {
       const version = await database.getFirstAsync<{ user_version: number }>(
         'PRAGMA user_version',
       );
-      expect(version?.user_version).toBe(2);
+      expect(version?.user_version).toBe(3);
 
       const exercises = await database.getAllAsync<{
         id: string;
@@ -203,6 +210,11 @@ describe('database migrations', () => {
       ]);
       expect(workoutExercise?.notes_snapshot).toBe('Original description');
 
+      const workout = await database.getFirstAsync<{
+        saved_at: string | null;
+      }>('SELECT saved_at FROM workouts WHERE id = ?', ['workout-1']);
+      expect(workout?.saved_at).toBe('2026-10-18T00:00:00.000Z');
+
       const routineExerciseColumns = await database.getAllAsync<{
         name: string;
       }>("SELECT name FROM pragma_table_info('routine_exercises')");
@@ -216,6 +228,95 @@ describe('database migrations', () => {
       expect(
         workoutExerciseColumns.map((column) => column.name),
       ).not.toContain('description_snapshot');
+    } finally {
+      await database.closeAsync();
+    }
+  });
+
+  it('enforces one workout per routine and date', async () => {
+    const database = await openTestDatabase();
+
+    try {
+      await database.runAsync(
+        `INSERT INTO workouts (
+           id, routine_id, date, routine_name_snapshot, saved_at
+         ) VALUES (?, ?, ?, ?, ?)`,
+        [
+          'workout-1',
+          'routine-1',
+          '2026-11-02',
+          'Lower A',
+          '2026-11-02T10:00:00.000Z',
+        ],
+      );
+
+      await expect(
+        database.runAsync(
+          `INSERT INTO workouts (
+             id, routine_id, date, routine_name_snapshot, saved_at
+           ) VALUES (?, ?, ?, ?, ?)`,
+          [
+            'workout-2',
+            'routine-1',
+            '2026-11-02',
+            'Lower A',
+            '2026-11-02T12:00:00.000Z',
+          ],
+        ),
+      ).rejects.toThrow();
+
+      const workouts = await database.getAllAsync<{ id: string }>(
+        'SELECT id FROM workouts ORDER BY id',
+      );
+      expect(workouts.map((workout) => workout.id)).toEqual(['workout-1']);
+    } finally {
+      await database.closeAsync();
+    }
+  });
+
+  it('fails safely when existing workouts duplicate a routine and date', async () => {
+    const database = new NodeSqliteDatabase(':memory:');
+
+    try {
+      await database.execAsync('PRAGMA foreign_keys = ON;');
+      await database.execAsync(MIGRATIONS[0].up);
+      await database.execAsync(MIGRATIONS[1].up);
+      await database.execAsync('PRAGMA user_version = 2;');
+
+      await database.runAsync(
+        `INSERT INTO workouts (id, routine_id, date, routine_name_snapshot)
+         VALUES ('workout-1', 'routine-1', '2026-11-02', 'Lower A')`,
+      );
+      await database.runAsync(
+        `INSERT INTO workouts (id, routine_id, date, routine_name_snapshot)
+         VALUES ('workout-2', 'routine-1', '2026-11-02', 'Lower A')`,
+      );
+
+      await expect(migrateDatabase(database)).rejects.toThrow();
+
+      const version = await database.getFirstAsync<{ user_version: number }>(
+        'PRAGMA user_version',
+      );
+      expect(version?.user_version).toBe(2);
+
+      const columns = await database.getAllAsync<{ name: string }>(
+        "SELECT name FROM pragma_table_info('workouts')",
+      );
+      expect(columns.map((column) => column.name)).not.toContain('saved_at');
+
+      const uniqueIndex = await database.getAllAsync<{ name: string }>(
+        `SELECT name FROM sqlite_master
+         WHERE type = 'index' AND name = 'idx_workouts_routine_date_unique'`,
+      );
+      expect(uniqueIndex).toEqual([]);
+
+      const workouts = await database.getAllAsync<{ id: string }>(
+        'SELECT id FROM workouts ORDER BY id',
+      );
+      expect(workouts.map((workout) => workout.id)).toEqual([
+        'workout-1',
+        'workout-2',
+      ]);
     } finally {
       await database.closeAsync();
     }

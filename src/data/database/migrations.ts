@@ -147,6 +147,23 @@ export const MIGRATIONS: readonly Migration[] = [
       ALTER TABLE workout_exercises DROP COLUMN description_snapshot;
     `,
   },
+  {
+    version: 3,
+    name: 'add_workout_saved_at_and_uniqueness',
+    up: `
+      ALTER TABLE workouts ADD COLUMN saved_at TEXT;
+
+      UPDATE workouts
+      SET saved_at = date || 'T00:00:00.000Z'
+      WHERE saved_at IS NULL;
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_workouts_routine_date_unique
+        ON workouts (routine_id, date);
+
+      CREATE INDEX IF NOT EXISTS idx_workouts_date_saved_at
+        ON workouts (date DESC, saved_at DESC);
+    `,
+  },
 ];
 
 /**

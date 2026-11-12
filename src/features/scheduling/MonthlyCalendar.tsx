@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
-  Button,
   IconButton,
   Surface,
   Text,
@@ -27,6 +26,8 @@ export interface MonthlyCalendarProps {
   today: DateOnly;
   /** Scheduled routine counts by date. Used by the `schedule` variant. */
   scheduledCounts?: ReadonlyMap<DateOnly, number>;
+  /** Saved-workout counts by date. Used by the `schedule` variant. */
+  workoutCounts?: ReadonlyMap<DateOnly, number>;
   loading?: boolean;
   /** True when the month request failed and counts are unavailable. */
   scheduleUnavailable?: boolean;
@@ -42,12 +43,14 @@ export interface MonthlyCalendarProps {
 }
 
 const NO_SCHEDULED_DAYS: ReadonlyMap<DateOnly, number> = new Map();
+const NO_SAVED_WORKOUTS: ReadonlyMap<DateOnly, number> = new Map();
 
 /**
- * Month view with date selection and scheduled-routine markers.
+ * Month view with date selection and separate markers for scheduled routines
+ * and saved workouts.
  *
- * Scheduling state is read from the application layer; the calendar only
- * renders the counts it receives and reports user intent through callbacks.
+ * Planning and workout state are read from the application layer; the calendar
+ * only renders the counts it receives and reports user intent through callbacks.
  */
 export function MonthlyCalendar({
   year,
@@ -55,6 +58,7 @@ export function MonthlyCalendar({
   selectedDate,
   today,
   scheduledCounts = NO_SCHEDULED_DAYS,
+  workoutCounts = NO_SAVED_WORKOUTS,
   loading = false,
   scheduleUnavailable = false,
   variant = "schedule",
@@ -134,12 +138,27 @@ export function MonthlyCalendar({
 
           const selected = date === selectedDate;
           const isToday = date === today;
-          const count = showSchedule ? (scheduledCounts.get(date) ?? 0) : 0;
+          const routineCount = showSchedule
+            ? (scheduledCounts.get(date) ?? 0)
+            : 0;
+          const savedWorkoutCount = showSchedule
+            ? (workoutCounts.get(date) ?? 0)
+            : 0;
           const accessibilityLabel = showSchedule
-            ? `${formatFullDate(date)}${
-                count === 0
-                  ? ", sin rutinas"
-                  : `, ${count} ${count === 1 ? "rutina" : "rutinas"}`
+            ? `${formatFullDate(date)}, ${
+                routineCount === 0
+                  ? "sin rutinas"
+                  : `${routineCount} ${
+                      routineCount === 1 ? "rutina" : "rutinas"
+                    }`
+              }, ${
+                savedWorkoutCount === 0
+                  ? "sin entrenamientos guardados"
+                  : `${savedWorkoutCount} ${
+                      savedWorkoutCount === 1
+                        ? "entrenamiento guardado"
+                        : "entrenamientos guardados"
+                    }`
               }`
             : formatFullDate(date);
 
@@ -170,14 +189,45 @@ export function MonthlyCalendar({
                 >
                   {Number(date.slice(8, 10))}
                 </Text>
-                {count > 0 ? (
-                  <View style={[styles.dot, selected && styles.selectedDot]} />
+                {routineCount > 0 || savedWorkoutCount > 0 ? (
+                  <View style={styles.markers}>
+                    {routineCount > 0 ? (
+                      <View
+                        style={[styles.dot, selected && styles.selectedMarker]}
+                      />
+                    ) : null}
+                    {savedWorkoutCount > 0 ? (
+                      <View
+                        style={[
+                          styles.workoutMarker,
+                          selected && styles.selectedMarker,
+                        ]}
+                      />
+                    ) : null}
+                  </View>
                 ) : null}
               </View>
             </TouchableRipple>
           );
         })}
       </View>
+
+      {showSchedule ? (
+        <View style={styles.footer}>
+          <View style={styles.legend}>
+            <View style={styles.legendDot} />
+            <Text style={styles.legendLabel} variant="labelSmall">
+              Rutina programada
+            </Text>
+          </View>
+          <View style={styles.legend}>
+            <View style={styles.legendWorkoutMarker} />
+            <Text style={styles.legendLabel} variant="labelSmall">
+              Entrenamiento guardado
+            </Text>
+          </View>
+        </View>
+      ) : null}
     </Surface>
   );
 }
@@ -278,21 +328,33 @@ const styles = StyleSheet.create({
   selectedDayLabel: {
     color: colors.onPrimary,
   },
-  dot: {
+  markers: {
     position: "absolute",
-    bottom: 5,
+    bottom: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  dot: {
     width: 4,
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.primary,
   },
-  selectedDot: {
+  workoutMarker: {
+    width: 8,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.sage,
+  },
+  selectedMarker: {
     backgroundColor: colors.onPrimary,
   },
   footer: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingTop: spacing.sm,
@@ -308,10 +370,13 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: colors.primary,
   },
+  legendWorkoutMarker: {
+    width: 10,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.sage,
+  },
   legendLabel: {
     color: colors.textMuted,
-  },
-  todayButton: {
-    borderRadius: radii.pill,
   },
 });

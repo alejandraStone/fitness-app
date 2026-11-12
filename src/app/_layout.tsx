@@ -57,6 +57,22 @@ export default function RootLayout() {
               options={{ title: "Editar nombre" }}
             />
             <Stack.Screen
+              name="workouts/record"
+              options={{ title: "Registrar entrenamiento" }}
+            />
+            <Stack.Screen
+              name="workouts/history"
+              options={{ title: "Historial de entrenamientos" }}
+            />
+            <Stack.Screen
+              name="workouts/[id]/index"
+              options={{ title: "Entrenamiento" }}
+            />
+            <Stack.Screen
+              name="workouts/[id]/edit"
+              options={{ title: "Editar entrenamiento" }}
+            />
+            <Stack.Screen
               name="sheets/assign-routine"
               options={sheetOptions([0.6, 1])}
             />

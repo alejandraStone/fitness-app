@@ -21,7 +21,7 @@
 
 **Verify:** Models represent the saved workout, historical snapshot and actual performance requirements without adding out-of-scope fields.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-02). Added `src/domain/workouts/models.ts` with the workout, exercise, set, summary, recording-context and previous-performance models, stable identifiers, routines type reuse and public exports. The domain `WorkoutRepository` port is included; no React Native or SQLite imports were added.
 
 ### T002 — Implement actual-performance and snapshot validation
 
@@ -37,7 +37,7 @@
 
 **Verify:** Tests cover zero kilograms, negative weight, missing repetitions, missing sets, extra sets and changed exercise counts.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-02). Added immutable snapshot construction and actual-performance validation with Spanish messages. Unit tests cover valid values, zero kilograms, negative and empty weights, missing and invalid repetitions, missing and extra sets, malformed entries and changed exercise counts.
 
 ### T003 — Implement matching, previous performance and summaries
 
@@ -52,7 +52,7 @@
 
 **Verify:** Tests prove that whitespace and letter case do not affect matching, same-date workouts use the latest saved record, and summaries match the saved data.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-02). Added exercise-name normalization, previous-performance selection with date, `savedAt` and identifier tie-breaking, draft exclusion and saved-workout summaries. Unit tests cover whitespace, case, Unicode composition, strict date ordering, duplicate names and summary counts.
 
 ## Phase 2 — SQLite Persistence
 
@@ -69,7 +69,7 @@
 
 **Verify:** A new database migrates to version 3, the unique constraint rejects a duplicate routine/date pair, and the migration fails safely without deleting data when existing duplicates are found.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-02). Added append-only migration 3 `add_workout_saved_at_and_uniqueness`: `saved_at` backfilled from each workout date, a unique index on `(routine_id, date)` and a `(date DESC, saved_at DESC)` history index. Migration tests cover the new schema, index set, backfill, duplicate rejection and transactional rollback that preserves version 2 data when duplicates block the upgrade. Full suite: 34 suites / 211 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T005 — Implement workout creation and detail repository
 
@@ -85,7 +85,7 @@
 
 **Verify:** A workout with multiple exercises and sets is created and read back in order; a duplicate routine/date fails without partial data; SQLite remains inside the data layer.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-02). Added `SqliteWorkoutRepository` with transactional creation, ordered exercise and set reads, lookup by workout ID and routine/date, and mapping of the SQLite routine/date unique violation to `DuplicateWorkoutError`. Repository tests cover ordered round-trips, missing lookups, composite uniqueness and transaction rollback. Full suite: 35 suites / 216 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T006 — Implement actual-performance updates
 
@@ -100,7 +100,7 @@
 
 **Verify:** Editing actual values changes only `sets` data; snapshots and dates remain byte-for-byte unchanged; failed updates leave the original values intact.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-02). Added transactional `updateActualSets` to `SqliteWorkoutRepository`. It verifies the workout exists, every exercise belongs to it and every set belongs to its workout exercise before updating only `weight_kg` and `reps`. Tests cover actual-only edits with deliberately changed snapshot fields, snapshot/date preservation, unknown workouts, cross-workout set and exercise ownership, and rollback after a partial update. Full suite: 35 suites / 220 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T007 — Implement summary and previous-performance reads
 
@@ -115,7 +115,7 @@
 
 **Verify:** History and month queries return the correct counts and order; same-date workouts are ordered by `saved_at`; previous candidates exclude the selected date and the edited workout when requested.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-02). Added aggregate summary reads for full history and half-open date ranges, ordered by workout date and `saved_at` descending. Added previous-performance candidate reads strictly before the selected date, with newest-first ordering and optional exclusion of the edited workout; candidates return complete saved workouts for application-level name matching. Repository tests cover aggregate counts, same-date `saved_at` ordering, month boundaries, exclusion and strict date filtering. Full suite: 35 suites / 223 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T008 — Verify workout persistence integrity
 
@@ -130,7 +130,7 @@
 
 **Verify:** AC-03, AC-05, AC-07 and AC-13 persistence behavior is covered by real SQLite integration tests.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-02). Added real-SQLite persistence integration tests for rollback after a child set fails, duplicate routine/date rejection without partial data, ordered exercise/set reads from unordered input, snapshot preservation across routine edits, workout preservation after routine deletion, and workout/snapshot persistence across a database close and reopen. Updated the existing direct-SQL historical-preservation fixture to include `saved_at` and verify it remains unchanged. The existing migration test confirming `PRAGMA foreign_key_list('workouts')` is empty remains in place. Full suite: 36 suites / 228 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ## Phase 3 — Application and Composition
 
@@ -147,7 +147,7 @@
 
 **Verify:** AC-01, AC-02 and AC-08 application behavior passes, including future, unscheduled, missing-routine and already-saved cases.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-02). Added `prepareWorkoutRecording` with injected `today`, routine and scheduling repositories. It validates the date, rejects future dates before loading data, rejects missing or unscheduled routines, returns an existing saved workout instead of starting a duplicate recording, builds the immutable snapshot from the current routine, and loads previous performances strictly before the selected date aligned with context exercise order. Added application error codes and Spanish messages. Tests cover current and past dates, recurring and one-time scheduling, invalid and future dates, missing and unscheduled routines, existing workouts, and normalized previous-performance matching. Full suite: 37 suites / 235 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T010 — Implement save-workout use case
 
@@ -163,7 +163,7 @@
 
 **Verify:** AC-03, AC-05 and AC-07 pass; a failed save creates no partial data and leaves the draft available for retry.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-09). Added `saveWorkout` with actual-performance validation against the captured snapshot, source-routine existence checking, recoverable cancellation when the routine was deleted during recording, Spanish duplicate handling, identifier and save-timestamp generation, and transactional persistence through the captured snapshot. `save-workout.test.ts` covers valid saves, invalid values, deleted routines, duplicates and recoverable persistence failures. `save-workout.integration.test.ts` uses real SQLite to cover complete round-trips, duplicate preservation, deleted-routine cancellation, snapshot preservation after a routine edit, full rollback when a child set insert fails and a successful retry from the same captured context. Full suite: 39 suites / 245 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T011 — Implement detail and edit-context use cases
 
@@ -177,7 +177,7 @@
 
 **Verify:** Detail remains readable after the source routine is deleted, and edit context returns only earlier workouts.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-10). Added `getWorkoutDetail` for complete snapshot reads and `getWorkoutEditingContext` for the saved workout plus aligned previous performances. The editing context excludes the current workout and only uses earlier saved workouts. Tests cover complete reads, missing identifiers, workouts whose source routine was deleted, current-workout exclusion, aligned earlier results and persistence-error translation. Full suite: 47 suites / 288 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T012 — Implement update-workout-actuals use case
 
@@ -191,7 +191,7 @@
 
 **Verify:** AC-10 application behavior passes and no snapshot field can be changed through the edit path.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-10). Added `updateWorkoutActuals`, which loads the persisted workout, rejects every structural change to identifiers, date, routine snapshot, exercise order and planned configuration, validates actual values with the domain rules and calls the transactional actual-only repository update. Tests cover valid edits, missing workouts, invalid values, read/write persistence failures and each structural field. Full suite: 47 suites / 288 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T013 — Implement history and monthly-summary use cases
 
@@ -205,7 +205,7 @@
 
 **Verify:** History and Home activity receive saved workouts only; month queries include the first and last day of the month and exclude adjacent months.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-10). Added `listWorkoutHistory` and `listWorkoutsByMonth` with a shared application-layer ordering rule. History returns saved workouts newest first with deterministic tie-breaking; month queries canonicalize any valid date to the half-open range from the first day to the first day of the next month and never include scheduled routines. Tests cover ordering, ties, empty results, both month boundaries, adjacent months, December rollover, invalid months and persistence errors. Full suite: 47 suites / 288 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T014 — Compose workout services with the existing database
 
@@ -220,7 +220,7 @@
 
 **Verify:** Existing routine screens continue to work; workout screens can call the new services; only one database connection is opened; a failed initialization can retry.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-10). Extracted `createRoutineServices(database)` and added `createWorkoutServices(database)`. `getAppServices()` opens `openAppDatabase()` once, shares that connection with both service factories and caches the promise; failed initialization clears the cache so the provider can retry. The existing provider exposes `useRoutineServices()` and the new `useWorkoutServices()` while preserving its loading and retryable error states. Full suite: 47 suites / 288 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ## Phase 4 — Shared Workout Presentation
 
@@ -237,7 +237,7 @@
 
 **Verify:** Formatting handles singular/plural values, decimals and zero kilograms; all visible copy is Spanish.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-09). Added `src/entities/workout/` formatting for full Spanish workout dates, exercise and repetition counts, recorded-set performance and the `N ejercicios · N series` history summary. Added reusable read-only exercise/set cards for Workout Detail and a summary statistics view for exercise count, total sets and total repetitions. Formatting reuses the existing calendar, weight, repetition and set conventions. Unit tests cover singular/plural labels, decimals, zero kilograms, recorded sets and a complete Spanish date. Full suite: 41 suites / 253 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T016 — Add workout form value conversion
 
@@ -252,7 +252,7 @@
 
 **Verify:** Form conversion delegates authoritative rules to the domain validator and never silently converts missing repetitions to zero.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-09). Added `validateWorkoutFormValues` under `src/features/workout-recording/`. Weight and repetition text stays raw while editing and is converted only when the form is submitted. Empty values become `undefined` and non-numeric values become `NaN`, so the domain validator rejects them explicitly; missing repetitions are never converted to zero. Validation delegates to `validateWorkoutPerformance`, which remains the single owner of the authoritative rules and field paths. Unit tests cover valid decimal and zero weights, empty and non-numeric weights, empty, non-integer and zero repetitions, and exercise/set count mismatches.
 
 ### T017 — Build shared recording components
 
@@ -267,7 +267,7 @@
 
 **Verify:** Components render planned and actual values correctly, expose accessible field labels and cannot change the number of sets.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-09). Added `SetInputRow`, `PreviousPerformanceView` and `ExerciseRecordingCard` under `src/features/workout-recording/`. The exercise card shows the captured plan, notes and previous result, and renders exactly one controlled weight/repetition row per planned set using `AppTextInput`, `Card` and theme tokens. Inputs expose Spanish set-specific accessible labels, field errors use the domain field paths, and the components contain no add, remove or skip controls and no persistence or workflow logic. The feature is exported through its public index. Full suite: 41 suites / 253 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ## Phase 5 — Workout Detail
 
@@ -285,7 +285,7 @@
 
 **Verify:** AC-09 passes for a saved workout, including after its source routine is edited or deleted. The edit action is added in T024.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-10). Added `WorkoutDetailView`, the `workouts/[id]/index` route and the `Entrenamiento` stack title. Detail loads the saved workout through `getWorkoutDetail`, reloads on focus, shows the historical date, routine name, ordered exercises, notes, planned targets, actual sets and exercise/set/repetition totals, and provides Spanish loading, not-found and retryable error states. It exposes no delete action, date editing or progression placeholder; the edit action was added separately in T024. The application detail test confirms the record stays readable after its source routine is deleted. Full suite: 47 suites / 288 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ## Phase 6 — Workout History
 
@@ -303,7 +303,7 @@
 
 **Verify:** AC-11 passes, including empty history, month grouping and opening a saved workout.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-10). Added `WorkoutHistoryList`, the `groupWorkoutsByMonth` helper, the `workouts/history` route and the `Historial de entrenamientos` stack title. History loads saved summaries through `listWorkoutHistory`, reloads on focus, groups months newest first, shows the date, historical routine name and `N ejercicios · N series` per item, opens Workout Detail on selection and provides Spanish loading, empty and retryable error states. Only persisted workouts are rendered; scheduled routines never enter this flow. Grouping tests cover ordering, month boundaries, empty input and invalid dates. Full suite: 47 suites / 288 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ## Phase 7 — Recording
 
@@ -320,7 +320,7 @@
 
 **Verify:** AC-01, AC-02 and AC-07 navigation behavior passes. Opening recording and leaving without saving creates no workout.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-10). Added the `workouts/record` route and the `Registrar entrenamiento` stack title. The route reads the routine identifier and Home-selected date from navigation parameters, loads the immutable context through `prepareWorkoutRecording`, shows Spanish loading, invalid-date, unscheduled, missing-routine and retryable error states, and replaces itself with the existing Workout Detail when the routine/date pair is already saved. No date picker or other recording entry point was added; leaving without saving performs no persistence write. Full suite: 47 suites / 288 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T021 — Implement the recording form
 
@@ -337,7 +337,7 @@
 
 **Verify:** AC-03, AC-04 and AC-08 pass. A workout with any missing or invalid repetitions cannot be saved, and actual values never update the routine.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-10). Added the shared `WorkoutRecordingForm` with one controlled weight/repetition row per planned set in snapshot order. It shows exercise names, notes, planned sets, repetition ranges and planned weight, prefills actual weight from the plan, leaves repetitions empty, displays previous performances when available and provides Spanish inline field feedback. The form cannot add, remove or skip exercises or sets, and validation delegates to the domain rules only on submit. Tests cover raw-value conversion and every invalid/valid case. Full suite: 47 suites / 288 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T022 — Implement save, duplicate handling and errors
 
@@ -353,7 +353,7 @@
 
 **Verify:** AC-05 and AC-06 pass. A failed save leaves no partial data; a successful save opens detail without a back path to the draft.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-10). Added the `Guardar` header action with loading and disabled states and a synchronous duplicate-submission guard. Saving uses `saveWorkout` with the captured context, keeps the draft and shows inline Spanish errors when persistence fails, and cancels the recording with a Spanish explanation when the source routine was deleted. On success the recording route is replaced with the saved Workout Detail, with no success snackbar. Existing save unit and real-SQLite integration tests cover atomicity, duplicate preservation, deleted-routine cancellation and retry from the same draft. Full suite: 47 suites / 288 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ### T023 — Enforce the draft lifecycle
 
@@ -368,7 +368,7 @@
 
 **Verify:** AC-15 passes. Leaving after entering values creates no workout and shows no confirmation; reopening starts from the current routine configuration.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-10). The recording draft lives only in the route component's memory; no draft data is written before a successful save. Leaving by header back, gesture or hardware back discards it immediately without a confirmation dialog. `usePreventRemove` blocks route removal while a save is in progress, and every mount loads a fresh snapshot from the current routine configuration. Full suite: 47 suites / 288 tests pass; type checking passes and lint reports only the pre-existing `MonthlyCalendar.tsx` warning.
 
 ## Phase 8 — Editing
 
@@ -386,7 +386,7 @@
 
 **Verify:** AC-10 input behavior passes; only actual weights and repetitions are editable, and a deleted source routine does not block editing.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-12). Added the `workouts/[id]/edit` route and the `Editar entrenamiento` stack title. Workout Detail exposes the edit action, which loads the saved record through `getWorkoutEditingContext`. The edit form reuses `WorkoutRecordingForm`, prefills actual weights and repetitions, shows previous performances excluding the current workout, and rebuilds the immutable context from the persisted snapshot so date, routine name, exercise order, planned values and set count cannot change. Exact structural changes remain rejected by `updateWorkoutActuals`. Verified in the web build at a mobile viewport, including editing after the source routine was deleted. Full suite: 47 suites / 291 tests pass.
 
 ### T025 — Save edits and refresh detail
 
@@ -401,7 +401,7 @@
 
 **Verify:** AC-10 passes end-to-end; updated values persist, and the date, snapshot and set count remain unchanged.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-12). Saving edits uses `updateWorkoutActuals` with a synchronous duplicate-submission guard, applies inline Spanish validation and persistence errors, and returns to Workout Detail on success. Detail reloads on focus, so updated values appear immediately without a success snackbar. Verified end-to-end in the web build: actual weights and repetitions changed, the date, routine and exercise snapshots, planned values and set count stayed unchanged, and the edited values survived a browser restart.
 
 ## Phase 9 — Home Integration
 
@@ -417,7 +417,7 @@
 
 **Verify:** Home receives saved workouts for the visible month and selected date; scheduled routines remain separate; retry works after a persistence failure.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-12). Home loads the monthly schedule and saved-workout summaries concurrently with `Promise.allSettled`, preserves visible data while refreshing after a secondary screen closes, and exposes independent schedule/workout loading and retryable error states. Selected-date lookup maps saved workouts by routine/date for the card actions, while month counts feed the calendar and activity section. Scheduled routines remain a separate dataset and are never counted as completed workouts. Verified in the web build after returning from recording and editing, including month changes and empty months.
 
 ### T027 — Implement Home card workout states
 
@@ -433,7 +433,7 @@
 
 **Verify:** AC-01, AC-02 and AC-07 Home behavior passes; no second recording can start for the same routine/date.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-12). Scheduled routine cards show `Registrar mi entrenamiento` for eligible today or past dates without a saved workout and `Ver entrenamiento` when the routine/date pair is already saved. Future dates render no workout action, tapping the card still opens Routine Detail, and the old `Próximamente` placeholder is absent. Opening a saved workout uses Workout Detail; the recording route also redirects to the existing workout if the pair is opened again. Verified in the web build for past, current and future dates.
 
 ### T028 — Distinguish saved workouts on the calendar
 
@@ -447,7 +447,7 @@
 
 **Verify:** AC-12 calendar behavior passes and the states are distinguishable without relying on color alone.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-12). The calendar renders a small primary dot for scheduled routines and a separate sage bar for saved workouts, showing both when a date has both states. A legend labels `Rutina programada` and `Entrenamiento guardado`, and accessibility labels include both counts. Saved workouts keep their marker after the source routine is no longer scheduled or is deleted. Verified in the web build before and after routine deletion, including selected and unselected dates.
 
 ### T029 — Add the Home Activity summary
 
@@ -462,7 +462,7 @@
 
 **Verify:** AC-12 activity behavior passes; changing months updates the count; opening history shows all saved workouts.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-12). Home renders `Actividad` below the selected-date section with the visible month's saved-workout count, a Spanish empty message when the month has none, and `Ver historial` in both states. The count derives only from saved-workout summaries, never from scheduled routines, planned sessions or calendar days. Verified in the web build for an empty month, a populated month and month navigation, with `Ver historial` opening the full saved-workout history.
 
 ## Phase 10 — Documentation and Verification
 
@@ -478,7 +478,7 @@
 
 **Verify:** Documentation matches the implemented screens and persistence behavior and contains no superseded rules.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-12). Updated `docs/architecture/database.md` with `saved_at`, the unique routine/date rule, the history index and previous-performance ordering. Updated `docs/desing/screens.md` with Home activity, card workout states, calendar markers, recording, detail, editing and history behavior, and removed the superseded Workout Records placeholders. Updated `docs/desing/design-system.md` with the saved-workout calendar marker, activity summary and workout presentation rules. Confirmed no remaining statements describe fake activity data or a `Próximamente` recording action.
 
 ### T031 — Run automated checks
 
@@ -493,7 +493,7 @@
 
 **Verify:** Commands complete successfully or every remaining failure is documented as pre-existing and unrelated.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-12). Ran `npm run typecheck` (pass), `npm run lint` (pass, no warnings), `npm test -- --runInBand` (47 suites / 291 tests pass) and `npx expo export --platform web` (successful export). No new errors or warnings remain.
 
 ### T032 — Verify the web flows at a mobile viewport
 
@@ -514,7 +514,7 @@
 
 **Verify:** AC-01 through AC-12 and AC-15 pass in the web build at a mobile viewport with no browser errors.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-12). Verified the web build at a 390×844 mobile viewport with headless Chrome. Confirmed: recording from a past and the current Home date; no recording action on a future date; draft discard on back navigation without a confirmation or persisted workout; previous performance matching across case differences, with whitespace normalization additionally covered by the domain tests; saving and opening Workout Detail; the Home card changing to `Ver entrenamiento`; editing only actual values with unchanged date and snapshot; Home activity and calendar markers refreshing; history grouped by month and opening detail; workouts remaining after deleting the source routine; editing after routine deletion; persistence across a browser restart; and Spanish copy throughout. The export had already completed successfully and the exercised screens produced no runtime failures.
 
 ### T033 — Verify native iOS and Android flows
 
@@ -530,7 +530,7 @@
 
 **Verify:** AC-13, AC-14 and AC-16 pass on iOS and Android, or remaining device-specific gaps are explicitly documented.
 
-**Status:** Pending.
+**Status:** Blocked (2026-11-12). Native iOS and Android verification could not be performed in this environment: no physical device, simulator, emulator or platform tooling is available (`adb`, `emulator` and `xcrun` are not installed). Automated tests and the web verification cover the shared recording, validation, saving, detail, editing, history and Spanish-copy behavior, but the following device-specific checks remain outstanding: keyboard behavior and safe areas on set inputs, native back navigation and gesture draft discard, row usability on small native screens, date-only and previous-performance behavior on device, offline operation and restart persistence on device, and accessibility labels, touch targets, calendar descriptions and screen-reader focus.
 
 ### T034 — Review scope and architecture
 
@@ -546,7 +546,7 @@
 
 **Verify:** Workout Records is complete within the approved V1 scope.
 
-**Status:** Pending.
+**Status:** Completed (2026-11-12). Scope and architecture review completed. Every acceptance criterion is covered by automated tests and/or the web verification, except the native device checks documented as blocked in T033. Confirmed one SQLite connection shared by routine and workout services, no database or repository access from `src/app` or `src/features`, historical snapshots surviving routine edits and deletion, the SQLite unique routine/date constraint, and no out-of-scope progression charts, personal records, free workouts, workout deletion, editable date, weight-unit selection or global exercise catalog. No backend, authentication, cloud storage, synchronization or new dependency was introduced. The only remaining work is the native iOS/Android verification listed in T033.
 
 ## Deferred Work
 

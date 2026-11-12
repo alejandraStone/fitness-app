@@ -154,12 +154,14 @@ Workout
 ├── id
 ├── routine_id
 ├── date
-└── routine_name_snapshot
+├── routine_name_snapshot
+└── saved_at
 ```
 
 - `routine_id`: original source routine ID, retained as historical metadata.
 - `date`: selected workout date; immutable after saving.
 - `routine_name_snapshot`: routine name captured when recording began.
+- `saved_at`: timestamp of the first successful save. Editing actual performance does not change it.
 
 **`Workout.routine_id` must not have a foreign key to `Routine`.** The source routine may be permanently deleted while its saved workouts remain available.
 
@@ -168,6 +170,16 @@ A workout must originate from a routine that exists when recording begins. Free 
 When recording begins, the application captures the routine configuration in a local draft. The first successful save persists the workout and its historical snapshot. Unfinished drafts do not count towards history, progression, charts, or personal records.
 
 A recording started from a routine that is subsequently deleted cannot be saved. The user must cancel that recording.
+
+Constraint:
+
+```sql
+UNIQUE (routine_id, date)
+```
+
+The unique index enforces at most one saved workout per routine and date. A month or history read is supported by an index ordered by `date DESC, saved_at DESC`.
+
+Previous-performance results use saved workouts with a date strictly before the selected workout date. Candidates are ordered by `date DESC, saved_at DESC` with a stable identifier tie-breaker; when editing, the current workout is excluded. The application then selects the latest result whose exercise-name snapshot matches after trimming and case normalization.
 
 ### 3.7 WorkoutExercise
 
@@ -256,8 +268,9 @@ Required invariants:
 6. All persisted weights use kilograms.
 7. Saved workouts contain valid repetitions for every planned set.
 8. Exercise and workout ordering is deterministic.
-9. Derived metrics are consistent with saved workout data.
-10. Local persistence preserves data across application restarts.
+9. At most one saved workout exists per routine and date.
+10. Derived metrics are consistent with saved workout data.
+11. Local persistence preserves data across application restarts.
 
 Use SQLite foreign keys and domain validation for the relationships and constraints they can enforce. Multi-record operations, including saving a workout and its child records, must use transactions to prevent partially persisted records.
 

@@ -3,18 +3,17 @@ import { StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
   Button,
-  Dialog,
   Icon,
   IconButton,
   List,
   Menu,
-  Portal,
   Surface,
   Text,
 } from 'react-native-paper';
 
 import type { ScheduledRoutineEntry } from '../../application/routines/schedule-resolution';
 import type { RoutineId } from '../../domain/routines';
+import type { WorkoutId, WorkoutSummary } from '../../domain/workouts';
 import { Card } from '../../shared/ui/Card';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import { ErrorBanner } from '../../shared/ui/ErrorBanner';
@@ -27,10 +26,18 @@ export interface ScheduledDayListProps {
   loading: boolean;
   errorMessage: string | null;
   removingAssignmentId: string | null;
+  /** False hides workout-dependent actions when workout state is unavailable. */
+  workoutsAvailable: boolean;
+  /** True when the selected date is after today. */
+  isFutureDate: boolean;
+  /** Saved workout for each routine on the selected date. */
+  workoutsByRoutine: ReadonlyMap<RoutineId, WorkoutSummary>;
   onRetry: () => void;
   onCreateRoutine: () => void;
   onAssignRoutine: () => void;
   onOpenRoutine: (routineId: RoutineId) => void;
+  onRecordWorkout: (routineId: RoutineId) => void;
+  onOpenWorkout: (workoutId: WorkoutId) => void;
   onRemoveAssignment: (entry: ScheduledRoutineEntry) => void;
 }
 
@@ -47,10 +54,15 @@ export function ScheduledDayList({
   loading,
   errorMessage,
   removingAssignmentId,
+  workoutsAvailable,
+  isFutureDate,
+  workoutsByRoutine,
   onRetry,
   onCreateRoutine,
   onAssignRoutine,
   onOpenRoutine,
+  onRecordWorkout,
+  onOpenWorkout,
   onRemoveAssignment,
 }: ScheduledDayListProps) {
   return (
@@ -132,10 +144,15 @@ export function ScheduledDayList({
           {entries.map((entry) => (
             <ScheduledRoutineCard
               entry={entry}
+              isFutureDate={isFutureDate}
               key={entry.routine.id}
               onOpenRoutine={onOpenRoutine}
+              onRecordWorkout={onRecordWorkout}
+              onOpenWorkout={onOpenWorkout}
               onRemoveAssignment={onRemoveAssignment}
               removingAssignmentId={removingAssignmentId}
+              workoutsAvailable={workoutsAvailable}
+              workout={workoutsByRoutine.get(entry.routine.id)}
             />
           ))}
         </View>
@@ -147,24 +164,35 @@ export function ScheduledDayList({
 interface ScheduledRoutineCardProps {
   entry: ScheduledRoutineEntry;
   removingAssignmentId: string | null;
+  workoutsAvailable: boolean;
+  isFutureDate: boolean;
+  workout: WorkoutSummary | undefined;
   onOpenRoutine: (routineId: RoutineId) => void;
+  onRecordWorkout: (routineId: RoutineId) => void;
+  onOpenWorkout: (workoutId: WorkoutId) => void;
   onRemoveAssignment: (entry: ScheduledRoutineEntry) => void;
 }
 
 function ScheduledRoutineCard({
   entry,
   removingAssignmentId,
+  workoutsAvailable,
+  isFutureDate,
+  workout,
   onOpenRoutine,
+  onRecordWorkout,
+  onOpenWorkout,
   onRemoveAssignment,
 }: ScheduledRoutineCardProps) {
   const [menuVisible, setMenuVisible] = useState(false);
   const [removeVisible, setRemoveVisible] = useState(false);
-  const [registerVisible, setRegisterVisible] = useState(false);
 
   const { routine, assignment, recurring } = entry;
   const exerciseCount = routine.exercises.length;
   const removalCopy =
     assignment === undefined ? null : getAssignmentRemovalCopy(recurring);
+  const showWorkoutAction =
+    workoutsAvailable && (workout !== undefined || !isFutureDate);
 
   return (
     <Card
@@ -228,19 +256,37 @@ function ScheduledRoutineCard({
         />
       </View>
 
-      <Button
-        accessibilityLabel={`Registrar mi entrenamiento: ${routine.name}`}
-        contentStyle={styles.registerButtonContent}
-        icon="play"
-        mode="contained"
-        onPress={(event) => {
-          event.stopPropagation();
-          setRegisterVisible(true);
-        }}
-        style={styles.registerButton}
-      >
-        Registrar mi entrenamiento
-      </Button>
+      {showWorkoutAction ? (
+        workout === undefined ? (
+          <Button
+            accessibilityLabel={`Registrar mi entrenamiento: ${routine.name}`}
+            contentStyle={styles.registerButtonContent}
+            icon="play"
+            mode="contained"
+            onPress={(event) => {
+              event.stopPropagation();
+              onRecordWorkout(routine.id);
+            }}
+            style={styles.registerButton}
+          >
+            Registrar mi entrenamiento
+          </Button>
+        ) : (
+          <Button
+            accessibilityLabel={`Ver entrenamiento: ${routine.name}`}
+            contentStyle={styles.registerButtonContent}
+            icon="eye-outline"
+            mode="contained-tonal"
+            onPress={(event) => {
+              event.stopPropagation();
+              onOpenWorkout(workout.id);
+            }}
+            style={styles.registerButton}
+          >
+            Ver entrenamiento
+          </Button>
+        )
+      ) : null}
 
       {removalCopy !== null ? (
         <ConfirmDialog
@@ -256,30 +302,6 @@ function ScheduledRoutineCard({
           visible={removeVisible}
         />
       ) : null}
-
-      <Portal>
-        <Dialog
-          onDismiss={() => setRegisterVisible(false)}
-          style={styles.dialog}
-          visible={registerVisible}
-        >
-          <View style={styles.dialogIcon}>
-            <Icon color={colors.primary} size={30} source="dumbbell" />
-          </View>
-          <Dialog.Title style={styles.dialogTitle}>Próximamente</Dialog.Title>
-          <Dialog.Content>
-            <Text style={styles.dialogMessage} variant="bodyMedium">
-              El registro de entrenamientos estará disponible en una próxima
-              versión.
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button icon="check" onPress={() => setRegisterVisible(false)}>
-              Entendido
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
     </Card>
   );
 }
@@ -383,23 +405,5 @@ const styles = StyleSheet.create({
   },
   registerButtonContent: {
     minHeight: 44,
-  },
-  dialog: {
-    borderRadius: radii.xl,
-    backgroundColor: colors.surface,
-  },
-  dialogIcon: {
-    alignItems: 'center',
-    paddingTop: spacing.lg,
-  },
-  dialogTitle: {
-    color: colors.text,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  dialogMessage: {
-    color: colors.textMuted,
-    lineHeight: 20,
-    textAlign: 'center',
   },
 });

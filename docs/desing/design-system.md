@@ -164,26 +164,38 @@ uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
   for meaningful actions.
 - Buttons used for primary flows have a minimum content height of 44.
 
-## 5. Scheduling Presentation
+## 5. Scheduling and Workout Presentation
 
 - Home opens with a single short greeting (`Hola` until Profile is implemented,
   then `Hola, <name>`) followed immediately by the calendar. Do not use a
   marketing tagline, long subtitle or `Rutinas` shortcut in the greeting.
-- The training activity summary and progression suggestions are reserved for
-  their approved features. Until Workout Records and Progression exist, do not
-  render fake or empty activity data on Home.
+- The `Actividad` section appears below the selected-date section. It shows the
+  number of saved workouts in the visible month, uses a Spanish empty message
+  when the month has none, and keeps `Ver historial` available in both states.
+  Only saved workouts count; scheduled routines, planned sessions and planned
+  targets never count as completed training. Progression suggestions remain
+  reserved for the Progression feature and are not rendered as placeholders.
 - The Home calendar is a fixed six-week, Monday-first grid. A fixed grid avoids
   layout jumps when changing months.
-- Dates with scheduled routines show a dot and include the count in the
-  accessibility label.
+- Dates with scheduled routines show a small primary-color dot. Dates with
+  saved workouts show a small sage-colored bar. A date with both states shows
+  both markers side by side, so the distinction does not rely on color alone.
+  The selected date renders both markers in the on-primary color.
+- A legend below the calendar labels the dot as `Rutina programada` and the bar
+  as `Entrenamiento guardado`. Calendar accessibility labels include both the
+  scheduled-routine count and the saved-workout count for the date. Saved
+  workouts keep their marker even when their source routine is no longer
+  scheduled or has been deleted.
 - The selected date is filled with the primary color. Today has a subtle
   outline when it is not selected.
 - The selected-date section below the calendar uses a dynamic title:
   `Rutinas de hoy` for today and `Rutinas del día` for another date. It does not
   repeat the selected date or add a generic subtitle.
-- Scheduled routine cards show the name, exercise count and a full-width
-  `Registrar mi entrenamiento` action with an icon. Tapping the card opens the
-  routine summary.
+- Scheduled routine cards show the name, exercise count and one full-width
+  workout action with an icon: `Registrar mi entrenamiento` for a today or past
+  date without a saved workout, or `Ver entrenamiento` when a saved workout
+  exists. A future date shows no recording action. Tapping the card still opens
+  the routine summary.
 - Do not show `Planificada`, recurrence chips or one-time assignment chips on
   Home. Recurrence and date assignments are summarized in Routine Detail.
 - A one-time assignment is removed from the card's overflow menu
@@ -237,6 +249,19 @@ uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
   counts or "done" labels, for scheduled routines.
 - Removing a one-time date never changes recurring weekdays. The UI explains
   this distinction before the action.
+- Record Workout and Edit Workout reuse the same exercise cards, one
+  weight/repetition row per planned set, inline field errors and previous
+  performance presentation. Inputs are prefilled with the planned weight when
+  recording and with the saved actual values when editing. Neither flow can add,
+  remove or skip exercises or sets.
+- Workout Detail presents the saved snapshot and actual sets with the shared
+  workout exercise and statistics components. It exposes an edit action but no
+  delete action, editable date or progression placeholder.
+- Workout History groups saved workouts by month, newest first, and shows the
+  date, historical routine name and `N ejercicios · N series`. It never includes
+  scheduled routines that have not been saved.
+- Saving or editing a workout shows no success snackbar; Workout Detail is the
+  confirmation.
 
 ## 6. Accessibility and Inclusivity
 

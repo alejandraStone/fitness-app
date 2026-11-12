@@ -30,12 +30,14 @@ Contains:
 - routines scheduled for the selected date (the selected date determines which routines are shown);
 - when the date has no routines: primary action `Usar una rutina` and secondary action `Crear rutina`;
 - when the date already has routines: compact `Añadir` action in the section header;
-- compact training activity summary with access to Workout History through `Ver historial`;
-- relevant progression suggestions, when available.
+- compact `Actividad` summary with the number of saved workouts in the visible month and access to Workout History through `Ver historial`;
+- relevant progression suggestions when the Progression feature is delivered; no placeholder is shown before then.
 
 The greeting must not occupy most of the first viewport; the calendar follows it directly. It contains no marketing tagline, long subtitle or `Rutinas` shortcut; the bottom tab owns navigation to Routines. Until the Profile feature exists, the application must not fake or hardcode a user name.
 
-The training activity summary and progression suggestions are reserved for their approved features. Until Workout Records and Progression exist, do not render fake or empty activity data on Home.
+The `Actividad` section is calculated from saved workouts only. It shows the visible month's saved-workout count, a Spanish empty message when the month has none, and keeps `Ver historial` available in both states. Scheduled routines, planned sessions, planned targets and calendar days never count as completed training. Progression suggestions remain reserved for the Progression feature; Home does not render fake or empty progression data.
+
+The calendar distinguishes scheduled routines from saved workouts with different marker shapes. A date can show both states. Saved workouts keep their marker even when their source routine is no longer scheduled or has been deleted. Calendar accessibility labels include both the routine count and the saved-workout count.
 
 Creating a routine from Home opens S5 with its name and optional planning. The selected date is not retained or assigned as a one-time assignment; the routine appears on its chosen recurring weekdays or remains unscheduled until assigned. Using an existing routine takes priority over creating one; `Crear rutina` remains available in the empty state and in the assignment sheet (S2).
 
@@ -55,11 +57,15 @@ Rules:
 
 ### Routine cards
 
-Each card shows the routine name, its exercise count and a `Registrar mi entrenamiento` action.
-- Tapping the card opens Routine Detail.
+Each card shows the routine name, its exercise count and one workout action:
+- `Registrar mi entrenamiento` for a today or past date without a saved workout for that routine and date. It opens Record Workout for the selected date.
+- `Ver entrenamiento` when a saved workout exists for that routine and date. It opens the saved Workout Detail instead of starting another recording.
+- No workout action for a future date.
+
+Tapping the card itself opens Routine Detail.
 - No scheduling-source chips or `Planificada` labels; scheduling details live in Routine Detail.
 - A one-time assignment can be removed from the card's overflow menu (`Quitar de este día`). The action always requires confirmation. If the routine also repeats on that weekday, the confirmation explains that the weekly recurrence remains. After removal, the card updates immediately.
-- Until Workout Records is implemented, `Registrar mi entrenamiento` shows a short `Próximamente` notice and creates no record.
+- Recording is never started from Routine Detail or the Routines list.
 
 ## 2. Routines
 
@@ -113,40 +119,54 @@ The total planned repetitions is calculated conservatively as planned sets multi
 
 Records actual performance for an existing routine on a selected date.
 
-- The user selects the date before recording begins; it cannot be changed after the workout is saved.
+- Recording starts only from a scheduled routine card on Home for the selected date. The date is today or in the past; future dates expose no recording action.
+- The selected Home date becomes the workout date and cannot be changed on this screen or after saving.
 - All of the routine's exercise entries are shown in configured order. Each shows: name and optional note, planned sets, target repetition range, planned weight, and one recording row per planned set.
 - At the start of recording, the app captures a snapshot of the routine and exercise configuration. Later routine changes do not modify it.
 - For every planned set, weight is prefilled from the planned weight and repetitions start blank. Both are editable independently.
-- Repetitions must be entered for every planned set before saving.
-- Not supported in V1: partial saves, skipping sets or exercises, adding or removing sets, recording without an existing routine.
-- Saving persists the workout and its historical exercise configuration together as one operation. If saving fails, nothing is left partially saved.
+- The previous saved result for the same exercise is shown when available, including its date, weights and repetitions. Matching uses the historical exercise-name snapshot, ignores leading/trailing whitespace and letter case, and considers only workouts strictly before the selected date. The most recently saved result wins when dates are equal.
+- Repetitions must be entered for every planned set before saving. Invalid weights and repetitions produce inline Spanish feedback on the affected fields.
+- Not supported in V1: partial saves, skipping sets or exercises, adding or removing sets, editing the routine from this flow, and recording without an existing routine.
+- Saving persists the workout and its historical exercise configuration together as one operation. If saving fails, nothing is left partially saved and the draft remains available for retry.
+- A routine can have at most one saved workout per date. When one already exists, Home shows `Ver entrenamiento` instead of starting another recording.
 - If the selected routine is permanently deleted before saving, the pending recording is cancelled and cannot be saved.
+- The draft exists only in screen memory. Leaving by back navigation, gesture or hardware back discards it immediately without a confirmation dialog. Unfinished drafts never appear in history or count towards activity.
+- A successful save opens Workout Detail. No success snackbar is shown.
 
 ## 5. Workout Detail
 
-A saved workout's historical record. It is the destination right after a successful save and is also reachable from Workout History.
+A saved workout's historical record. It is the destination right after a successful save and is also reachable from Workout History and from `Ver entrenamiento` on Home.
 
 Contains:
 - workout date;
 - routine name as recorded in the snapshot;
 - recorded exercises in their historical order;
-- recorded sets, weights and repetitions;
-- relevant performance summary;
-- progression result or suggestion, when applicable;
-- action to edit the workout.
+- exercise notes and planned sets, target repetition range and planned weight from the snapshot;
+- actual weight and repetitions for every recorded set;
+- summary of exercise count, total sets and total repetitions;
+- action to edit the recorded performance.
 
-The user can edit the recorded performance of a saved workout.
+The detail stays readable if the source routine was edited or permanently deleted, because every displayed value comes from the saved snapshot. The workout date is not editable and no delete action is exposed. Progression suggestions and results belong to the Progression feature and are not shown as placeholders. The screen reloads on focus so edits appear immediately, and provides Spanish loading, not-found and retryable error states.
+
+### Editing a saved workout
+
+- Only actual weights and repetitions can change.
+- The workout date, routine name snapshot, exercise names and order, exercise notes, planned sets, repetition range, planned weight and set count remain unchanged.
+- The edit form reuses the recording form and validation. Actual values are prefilled from the saved workout.
+- Previous performance excludes the workout being edited and uses the same normalized exercise-name matching as recording.
+- Saving uses the same transactional guarantees as recording, prevents duplicate submissions and shows inline Spanish validation or persistence errors. A deleted source routine does not block editing.
+- A successful edit returns to Workout Detail with the updated values. No success snackbar is shown.
 
 ## 6. Workout History
 
 Saved workouts in chronological order. It is a secondary stack screen, not a bottom-tab destination. Its entry point is the `Actividad` section on Home through `Ver historial`.
 
-Each item shows:
+Items are ordered from most recent to oldest and grouped by month. Each item shows:
 - workout date;
 - routine name as preserved in the historical record;
-- concise workout summary.
+- concise `N ejercicios · N series` summary.
 
-Selecting an item opens Workout Detail, where the user can review and edit it. Only saved workouts appear here; scheduled routines that have not been recorded never appear as completed workouts.
+Selecting an item opens Workout Detail, where the user can review and edit it. Only saved workouts appear here; scheduled routines that have not been recorded never appear as completed workouts. Saved workouts remain available after their source routine is edited or deleted. The screen provides Spanish loading, empty and retryable error states.
 
 ## 7. Progress
 

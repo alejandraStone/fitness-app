@@ -50,7 +50,7 @@ import {
   type UpdateRoutineInput,
   type UpdateRoutineResult,
 } from '../application/routines/update-routine';
-import { openAppDatabase } from '../data/database/expo-sqlite-database';
+import type { SqliteDatabase } from '../data/database/sqlite-database';
 import { SqliteRoutineRepository } from '../data/routines/sqlite-routine-repository';
 import { SqliteSchedulingRepository } from '../data/routines/sqlite-scheduling-repository';
 import type {
@@ -116,27 +116,15 @@ export interface RoutineServices {
   ) => Promise<SetRoutineWeekdaysResult>;
 }
 
-let servicesPromise: Promise<RoutineServices> | null = null;
-
 /**
- * Opens the local database once and returns the composed routine services.
+ * Creates the routine and scheduling services for an already-open database.
  *
- * A failed initialization clears the cached promise so the error screen can
- * retry safely.
+ * The application-services composition owns database initialization so every
+ * feature shares one SQLite connection for the application lifetime.
  */
-export function getRoutineServices(): Promise<RoutineServices> {
-  if (servicesPromise === null) {
-    servicesPromise = createRoutineServices().catch((error: unknown) => {
-      servicesPromise = null;
-      throw error;
-    });
-  }
-
-  return servicesPromise;
-}
-
-async function createRoutineServices(): Promise<RoutineServices> {
-  const database = await openAppDatabase();
+export function createRoutineServices(
+  database: SqliteDatabase,
+): RoutineServices {
   const routineRepository = new SqliteRoutineRepository({
     database,
     generateId: randomUUID,

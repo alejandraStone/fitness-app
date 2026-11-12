@@ -10,6 +10,7 @@ import { SqliteSchedulingRepository } from './sqlite-scheduling-repository';
 
 const CREATED = '2026-10-18T08:00:00.000Z';
 const UPDATED = '2026-10-19T12:00:00.000Z';
+const SAVED_AT = '2026-10-18T20:00:00.000Z';
 
 function createExercise(
   overrides: Partial<RoutineExercise> = {},
@@ -50,9 +51,9 @@ async function insertHistoricalWorkout(
 ): Promise<void> {
   await database.runAsync(
     `INSERT INTO workouts (
-      id, routine_id, date, routine_name_snapshot
-    ) VALUES (?, ?, ?, ?)`,
-    ['workout-1', routine.id, '2026-10-18', routine.name],
+      id, routine_id, date, routine_name_snapshot, saved_at
+    ) VALUES (?, ?, ?, ?, ?)`,
+    ['workout-1', routine.id, '2026-10-18', routine.name, SAVED_AT],
   );
   await database.runAsync(
     `INSERT INTO workout_exercises (
@@ -88,6 +89,7 @@ async function readHistoricalWorkout(
     routine_id: string;
     date: string;
     routine_name_snapshot: string;
+    saved_at: string | null;
   } | null;
   exercise: {
     id: string;
@@ -110,7 +112,7 @@ async function readHistoricalWorkout(
 }> {
   return {
     workout: await database.getFirstAsync(
-      `SELECT id, routine_id, date, routine_name_snapshot
+      `SELECT id, routine_id, date, routine_name_snapshot, saved_at
        FROM workouts WHERE id = ?`,
       ['workout-1'],
     ),

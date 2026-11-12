@@ -104,6 +104,20 @@ export function shiftMonth(
   return { year: nextYear, month: nextMonthIndex + 1 };
 }
 
+/**
+ * Returns the device's current local calendar date as a date-only value.
+ *
+ * Using local getters preserves the date the user sees on their device instead
+ * of shifting to the previous or next day in another time zone.
+ */
+export function todayDateOnly(now: Date = new Date()): DateOnly {
+  return formatDateOnly({
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+    day: now.getDate(),
+  });
+}
+
 /** Returns the first date of the month containing `date`. */
 export function startOfMonth(date: DateOnly): DateOnly {
   const parsed = parseDateOnly(date);

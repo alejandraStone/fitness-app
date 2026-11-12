@@ -12,7 +12,12 @@ import {
   type CalendarMonth,
   type RoutineId,
 } from '../../domain/routines';
-import { useRoutineServices } from '../../providers/RoutineServicesProvider';
+import type { WorkoutId, WorkoutSummary } from '../../domain/workouts';
+import { formatMonthYear } from '../../entities/calendar/format';
+import {
+  useRoutineServices,
+  useWorkoutServices,
+} from '../../providers/RoutineServicesProvider';
 import { Screen } from '../../shared/ui/Screen';
 import { colors, radii, spacing } from '../../shared/ui/theme';
 import {
@@ -21,6 +26,7 @@ import {
 } from '../../features/scheduling/calendar-grid';
 import { MonthlyCalendar } from '../../features/scheduling/MonthlyCalendar';
 import { ScheduledDayList } from '../../features/scheduling/ScheduledDayList';
+import { WorkoutActivitySummary } from '../../features/workout-history';
 
 type LoadStatus = 'loading' | 'ready' | 'error';
 
@@ -32,15 +38,22 @@ type LoadStatus = 'loading' | 'ready' | 'error';
  */
 export default function HomeScreen() {
   const router = useRouter();
-  const services = useRoutineServices();
+  const routineServices = useRoutineServices();
+  const workoutServices = useWorkoutServices();
   const [today, setToday] = useState(() => todayDateOnly());
   const [selectedDate, setSelectedDate] = useState(today);
   const [visibleMonth, setVisibleMonth] = useState<CalendarMonth>(() =>
     monthOfDateOnly(today),
   );
   const [days, setDays] = useState<ScheduledDay[]>([]);
-  const [status, setStatus] = useState<LoadStatus>('loading');
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [workouts, setWorkouts] = useState<WorkoutSummary[]>([]);
+  const [scheduleStatus, setScheduleStatus] = useState<LoadStatus>('loading');
+  const [workoutStatus, setWorkoutStatus] = useState<LoadStatus>('loading');
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [workoutError, setWorkoutError] = useState<string | null>(null);
+  const [workoutsLoadedMonth, setWorkoutsLoadedMonth] = useState<string | null>(
+    null,
+  );
   const [dayActionError, setDayActionError] = useState<string | null>(null);
   const [removingAssignmentId, setRemovingAssignmentId] = useState<
     string | null
@@ -53,43 +66,70 @@ export default function HomeScreen() {
       const requestId = loadRequest.current + 1;
       loadRequest.current = requestId;
       const monthKey = `${year}-${String(month).padStart(2, '0')}`;
-      // Refreshing after a sheet closes keeps the current plan visible. Only a
-      // real month change replaces it with the loading state.
+      // Refreshing after a secondary screen closes keeps the current data
+      // visible. Only a real month change replaces it with the loading state.
       const preserveData = loadedMonthRef.current === monthKey;
+      const monthStart = formatDateOnly({ year, month, day: 1 });
 
       if (!preserveData) {
-        setStatus('loading');
+        setScheduleStatus('loading');
+        setWorkoutStatus('loading');
         setDays([]);
+        setWorkouts([]);
+        setWorkoutsLoadedMonth(null);
       }
-      setLoadError(null);
+      setScheduleError(null);
+      setWorkoutError(null);
       setDayActionError(null);
 
-      try {
-        const result = await services.resolveMonthlySchedule(
-          formatDateOnly({ year, month, day: 1 }),
-        );
-        if (loadRequest.current !== requestId) {
-          return;
-        }
+      const [scheduleResult, workoutResult] = await Promise.allSettled([
+        routineServices.resolveMonthlySchedule(monthStart),
+        workoutServices.listWorkoutsByMonth(monthStart),
+      ]);
 
-        if (result.ok) {
-          setDays(result.days);
-          setStatus('ready');
-          loadedMonthRef.current = monthKey;
-        } else {
-          setLoadError(
-            result.errors[0]?.message ?? 'No se pudo cargar tu planificación.',
-          );
-          setStatus('error');
-        }
-      } catch {
-        if (loadRequest.current === requestId) {
-          setLoadError('No se pudo cargar tu planificación.');
-          setStatus('error');
-        }
+      if (loadRequest.current !== requestId) {
+        return;
+      }
+
+      let successfulSources = 0;
+
+      if (
+        scheduleResult.status === 'fulfilled' &&
+        scheduleResult.value.ok
+      ) {
+        setDays(scheduleResult.value.days);
+        setScheduleStatus('ready');
+        successfulSources += 1;
+      } else {
+        const message =
+          scheduleResult.status === 'fulfilled' && !scheduleResult.value.ok
+            ? (scheduleResult.value.errors[0]?.message ??
+              'No se pudo cargar tu planificación.')
+            : 'No se pudo cargar tu planificación.';
+        setScheduleError(message);
+        setScheduleStatus('error');
+      }
+
+      if (workoutResult.status === 'fulfilled' && workoutResult.value.ok) {
+        setWorkouts(workoutResult.value.summaries);
+        setWorkoutStatus('ready');
+        setWorkoutsLoadedMonth(monthKey);
+        successfulSources += 1;
+      } else {
+        const message =
+          workoutResult.status === 'fulfilled' && !workoutResult.value.ok
+            ? (workoutResult.value.errors[0]?.message ??
+              'No se pudo cargar la actividad del mes.')
+            : 'No se pudo cargar la actividad del mes.';
+        setWorkoutError(message);
+        setWorkoutStatus('error');
+      }
+
+      if (successfulSources > 0) {
+        loadedMonthRef.current = monthKey;
       }
     },
-    [services],
+    [routineServices, workoutServices],
   );
 
   useFocusEffect(
@@ -115,6 +155,36 @@ export default function HomeScreen() {
       ),
     [days],
   );
+  const workoutCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const workout of workouts) {
+      counts.set(workout.date, (counts.get(workout.date) ?? 0) + 1);
+    }
+    return counts;
+  }, [workouts]);
+  const workoutsBySelectedDate = useMemo(() => {
+    const byRoutine = new Map<RoutineId, WorkoutSummary>();
+    for (const workout of workouts) {
+      if (workout.date === selectedDate) {
+        byRoutine.set(workout.routineId, workout);
+      }
+    }
+    return byRoutine;
+  }, [selectedDate, workouts]);
+  const isFutureDate = selectedDate > today;
+  const calendarLoading =
+    scheduleStatus === 'loading' || workoutStatus === 'loading';
+  const dayListError =
+    dayActionError ??
+    (scheduleStatus === 'error'
+      ? scheduleError
+      : workoutStatus === 'error'
+        ? workoutError
+        : null);
+  const showActivity =
+    workoutsLoadedMonth ===
+    `${visibleMonth.year}-${String(visibleMonth.month).padStart(2, '0')}`;
+  const monthLabel = formatMonthYear(visibleMonth.year, visibleMonth.month);
 
   const openCreateRoutine = () => {
     router.push('/routines/new');
@@ -125,6 +195,24 @@ export default function HomeScreen() {
       pathname: '/routines/[id]',
       params: { id: routineId },
     });
+  };
+
+  const openRecordWorkout = (routineId: RoutineId) => {
+    router.push({
+      pathname: '/workouts/record',
+      params: { routineId, date: selectedDate },
+    });
+  };
+
+  const openWorkout = (workoutId: WorkoutId) => {
+    router.push({
+      pathname: '/workouts/[id]',
+      params: { id: workoutId },
+    });
+  };
+
+  const openHistory = () => {
+    router.push('/workouts/history');
   };
 
   const openAssignSheet = () => {
@@ -168,7 +256,7 @@ export default function HomeScreen() {
     setDayActionError(null);
     setRemovingAssignmentId(entry.assignment.id);
     try {
-      const result = await services.removeRoutineAssignment(
+      const result = await routineServices.removeRoutineAssignment(
         entry.assignment.id,
       );
       if (!result.ok) {
@@ -207,26 +295,30 @@ export default function HomeScreen() {
         </View>
 
         <MonthlyCalendar
-          loading={status === 'loading'}
+          loading={calendarLoading}
           month={visibleMonth.month}
           onNextMonth={() => shiftVisibleMonth(1)}
           onPreviousMonth={() => shiftVisibleMonth(-1)}
           onSelectDate={selectDate}
           onToday={goToToday}
-          scheduleUnavailable={status === 'error'}
+          scheduleUnavailable={scheduleStatus === 'error'}
           scheduledCounts={scheduledCounts}
           selectedDate={selectedDate}
           today={today}
+          workoutCounts={workoutCounts}
           year={visibleMonth.year}
         />
 
         <ScheduledDayList
           entries={entries}
-          errorMessage={status === 'error' ? loadError : dayActionError}
-          loading={status === 'loading'}
+          errorMessage={dayListError}
+          isFutureDate={isFutureDate}
+          loading={calendarLoading}
           onAssignRoutine={openAssignSheet}
           onCreateRoutine={openCreateRoutine}
           onOpenRoutine={openRoutine}
+          onOpenWorkout={openWorkout}
+          onRecordWorkout={openRecordWorkout}
           onRemoveAssignment={(entry) => {
             void removeAssignment(entry);
           }}
@@ -235,7 +327,17 @@ export default function HomeScreen() {
           }}
           removingAssignmentId={removingAssignmentId}
           title={dayTitle}
+          workoutsAvailable={showActivity}
+          workoutsByRoutine={workoutsBySelectedDate}
         />
+
+        {showActivity ? (
+          <WorkoutActivitySummary
+            count={workouts.length}
+            monthLabel={monthLabel}
+            onOpenHistory={openHistory}
+          />
+        ) : null}
       </ScrollView>
     </Screen>
   );

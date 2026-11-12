@@ -34,16 +34,10 @@ export function buildCalendarGrid(
 /**
  * Returns the device's current local calendar date as a date-only value.
  *
- * Using local getters preserves the date the user sees on their device instead
- * of shifting to the previous or next day in another time zone.
+ * Kept as a re-export so existing screen imports remain stable; the canonical
+ * implementation lives in the routines domain for non-UI callers.
  */
-export function todayDateOnly(now: Date = new Date()): DateOnly {
-  return formatDateOnly({
-    year: now.getFullYear(),
-    month: now.getMonth() + 1,
-    day: now.getDate(),
-  });
-}
+export { todayDateOnly } from '../../domain/routines';
 
 /** Returns the calendar month containing a date-only value. */
 export function monthOfDateOnly(date: DateOnly): CalendarMonth {
