@@ -230,9 +230,11 @@ describe('getWorkoutProgression', () => {
       recommendations: [
         {
           workoutExerciseId: 'workout-exercise-1',
+          routineExerciseId: 'routine-exercise-1',
           exerciseName: 'Sentadilla',
           repetitions: [8, 8, 8],
           plannedRepsMax: 8,
+          plannedWeightKg: 50,
         },
       ],
     });

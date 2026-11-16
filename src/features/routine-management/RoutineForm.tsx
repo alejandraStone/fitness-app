@@ -1,9 +1,4 @@
-import {
-  forwardRef,
-  useCallback,
-  useImperativeHandle,
-  useState,
-} from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -155,8 +150,7 @@ export const RoutineForm = forwardRef<RoutineFormHandle, RoutineFormProps>(
 
         closeEditor();
       } catch {
-        const message =
-          'No se pudo guardar la rutina. Inténtalo de nuevo.';
+        const message = 'No se pudo guardar la rutina. Inténtalo de nuevo.';
         setErrors([{ field: 'form', message }]);
         setExerciseError(message);
       } finally {
@@ -280,7 +274,7 @@ export const RoutineForm = forwardRef<RoutineFormHandle, RoutineFormProps>(
             setName(value);
             clearErrors();
           }}
-          placeholder="p. ej. Piernas A"
+          placeholder="ej. Tren superior, Rutina piernas"
           value={name}
         />
 
@@ -290,8 +284,8 @@ export const RoutineForm = forwardRef<RoutineFormHandle, RoutineFormProps>(
           </Text>
           <Text style={styles.sectionHint}>
             {creationMode
-              ? 'Opcional. Elige los días en que quieres repetir esta rutina. Si no eliges ninguno, quedará sin programar y podrás asignarla más adelante desde Inicio.'
-              : 'Opcional. Estos días se repiten cada semana. También puedes añadir días al planificar una fecha desde Inicio.'}
+              ? 'Elige los días en que quieres repetir esta rutina. Si no eliges ninguno, podrás asignarla más adelante desde Inicio.'
+              : 'Estos días se repiten cada semana. También puedes añadir días al planificar una fecha desde Inicio.'}
           </Text>
           <WeekdaySelector
             disabled={isSubmitting}

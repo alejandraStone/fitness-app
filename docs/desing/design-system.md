@@ -6,15 +6,28 @@ The initial visual system was approved on 2026-10-19 by explicit product
 direction. It is the baseline for the routines and scheduling feature and for
 future screens unless a later decision updates this document.
 
+The 2026-11-16 saved-workout summary redesign updated the global palette to a
+violet, ivory and lime identity and introduced Nunito and bundled vector
+illustrations. The tokens below are the current baseline for every screen; the
+previous rose-primary palette is superseded.
+
 - **UI component library:** `react-native-paper` `5.15.3` (MIT).
 - **Platform support:** React Native, Expo SDK 58, iOS, Android and web.
 - **Icons:** Material Community Icons through `@expo/vector-icons`, using
-  Paper's icon adapter.
+  Paper's icon adapter. Icons are used for functional actions, never as a
+  substitute for illustration.
+- **Illustrations:** original vector artwork rendered with `react-native-svg`
+  `15.16.0` (MIT) and bundled in the application. No remote images, stock
+  photography, emoji substitutes or gradient/illustration libraries are used.
+- **Typography:** Nunito static weights 400, 600, 700 and 800, bundled under
+  the SIL Open Font License 1.1 in `assets/fonts`. Shared buttons and inputs and
+  the redesigned workout summary use Nunito explicitly.
 - **Calendar:** built from Paper primitives and the app's date-only utilities.
   No separate calendar dependency is used.
 - **Theme entry point:** `src/shared/ui/theme.ts` exports the Paper theme and
   semantic design tokens.
-- **Provider:** `PaperProvider` wraps the app in `src/app/_layout.tsx`.
+- **Provider:** `PaperProvider` wraps the app in `src/app/_layout.tsx`; fonts are
+  loaded there before the app renders.
 
 This decision supersedes the earlier provisional guidance that no UI component
 library should be selected as part of the feature. The approved library must be
@@ -23,17 +36,21 @@ new explicit decision.
 
 ## 2. Visual Direction
 
-The app should feel calm, warm, editorial and inclusive. It is a personal
+The app should feel warm, optimistic, modern and inclusive. It is a personal
 training tool, not a performance-intimidation interface and not a stereotyped
 "feminine" theme.
 
-- Warm ivory background and clean white surfaces.
+- Sun-washed ivory background with clean white cards and soft lavender or blush
+  surfaces.
 - Deep plum text rather than pure black.
-- Rosewood / coral accent for primary actions and selected dates.
-- Sage and warm sand as restrained support tones.
-- Rounded but not overly playful surfaces, with subtle borders instead of heavy
-  shadows.
+- Vivid violet for primary actions and selected dates.
+- Soft lime for positive and completed states, supported by restrained rose,
+  coral, peach, sage and sand accents.
+- Generously rounded surfaces, pill actions and subtle, diffuse shadows instead
+  of hard borders everywhere.
 - Generous spacing and a clear type hierarchy.
+- Original bundled vector illustrations carry the celebratory moments. Do not
+  substitute emojis or stock photography, and do not introduce remote images.
 - Home opens with a single short greeting: `Hola` until Profile is implemented, then `Hola, <name>`. The calendar follows immediately. Do not use a marketing hero, long motivational subtitle or a `Rutinas` shortcut in the greeting.
 - Direct, respectful language. Do not imply that a scheduled routine has been
   completed.
@@ -51,28 +68,55 @@ with clear text.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `background` | `#FAF6F3` | Screen background |
+| `background` | `#FBF6F2` | Screen background |
 | `surface` | `#FFFFFF` | Cards, dialogs, inputs |
-| `surfaceMuted` | `#F7EFEA` | Source chips, quiet groupings |
-| `text` | `#2C2029` | Primary text |
-| `textMuted` | `#6A5A65` | Supporting text |
-| `border` | `#E5D7D1` | Card and input outlines |
-| `primary` | `#B4475B` | Primary actions, selected date |
-| `primaryPressed` | `#943647` | Pressed primary |
-| `primarySoft` | `#F8DDE1` | Greeting and today highlight |
+| `surfaceMuted` | `#F9F0EB` | Source chips, quiet groupings |
+| `surfaceLavender` | `#F5EFFC` | Progression and celebratory surfaces |
+| `surfaceSet` | `#F4EEFB` | Set rows and inline pills |
+| `text` | `#2D1B36` | Primary text |
+| `textMuted` | `#7A6A77` | Supporting text |
+| `border` | `#EEE0DB` | Card and input outlines |
+| `primary` | `#6C2BD9` | Primary actions, selected date |
+| `primaryPressed` | `#571FB3` | Pressed primary |
+| `primarySoft` | `#EFE4FC` | Greeting and selected highlight |
+| `primarySoftStrong` | `#E2D2F7` | Stronger primary tint |
 | `onPrimary` | `#FFFFFF` | Text on primary |
-| `sage` | `#66795F` | Support tone |
-| `sageSoft` | `#E8EEE2` | Support surfaces |
+| `secondary` | `#F1ECF8` | Tonal secondary surfaces |
+| `secondaryPressed` | `#E6DEEE` | Pressed tonal secondary |
+| `onSecondary` | `#4E2D72` | Text on tonal secondary |
+| `sage` | `#71893F` | Support and progression tone |
+| `sageSoft` | `#F0F6D9` | Support surfaces |
+| `positive` | `#DDF28C` | Completed and achievement states |
+| `positivePressed` | `#CCE874` | Pressed positive |
+| `positiveSoft` | `#F4F9DF` | Small achievement chips |
+| `onPositive` | `#39480F` | Text and icons on positive |
 | `sand` | `#A87343` | Support tone |
-| `sandSoft` | `#F7E5D4` | Support surfaces |
+| `sandSoft` | `#F8E9D8` | Support surfaces |
+| `rose` | `#B05168` | Statistic icons and warm accent |
+| `roseSoft` | `#FBE7E9` | Softer rose surface |
+| `blush` | `#FBE8E7` | Statistics strip |
+| `lavender` | `#F1E7FB` | Badges and icon circles |
+| `lavenderStrong` | `#E4D4F7` | Stronger lavender surface |
+| `ink` | `#301A45` | Final summary action |
+| `onInk` | `#FFFFFF` | Text on ink |
+| `peach` | `#FBE3CC` | Illustration backdrop |
+| `gold` | `#E4A62F` | Trophy accent |
+| `coral` | `#ED8C82` | Illustration accent |
 | `danger` | `#A13A34` | Destructive actions |
+| `dangerPressed` | `#822D28` | Pressed destructive action |
+| `onDanger` | `#FFFFFF` | Text on destructive action |
+| `disabled` | `#B9ACB2` | Disabled controls |
+| `inputBackground` | `#FFFFFF` | Text input surface |
 | `scrim` | `#000000` | Sheet and dialog scrims |
+| `scrimOpacity` | `0.45` | Shared scrim opacity |
 | `errorBackground` | `#FFEDEC` | Error banners |
+| `errorBorder` | `#E5B5B1` | Error input outlines |
 | `errorText` | `#6D211D` | Error text |
 
-The same values are mapped into the Material 3 `MD3LightTheme` in
+Core values are mapped into the Material 3 `MD3LightTheme` in
 `src/shared/ui/theme.ts`, so Paper components inherit the brand rather than
-stock Material colors.
+stock Material colors. The additional semantic surfaces and accents are used
+through the exported `colors` object.
 
 Overlays use the Paper theme `scrim` plus `surface` and `border` tokens. The
 sheet grabber uses `border`; the scrim uses `scrim`. The shared scrim opacity is
@@ -109,25 +153,35 @@ Cards generally use `lg`; dialogs use `xl`; primary buttons use `pill`.
 
 ### Typography
 
-The system platform font is used to avoid an additional font dependency and to
-respect native rendering, Dynamic Type and accessibility settings. Typography
-uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
+Nunito is bundled with the application in four static weights and used
+explicitly by the redesigned workout summary, `AppButton` and `AppTextInput`.
+Text in screens that have not been migrated yet keeps the platform font, so
+Dynamic Type and native text rendering remain available. Do not use Nunito
+weights that are not bundled; the family is referenced through the `fonts`
+tokens in `src/shared/ui/theme.ts`.
 
-| Role | Approximate size |
-| --- | --- |
-| Display / greeting | 32–34 |
-| Screen title | 28 |
-| Section heading | 22 |
-| Subheading | 17 |
-| Body | 16 |
-| Small / metadata | 14 |
-| Tiny / overline | 12 |
+| Role | Family | Approximate size |
+| --- | --- | --- |
+| Display / greeting | Nunito ExtraBold | 34 |
+| Hero | Nunito ExtraBold | 32 |
+| Screen / section title | Nunito ExtraBold | 28 / 22 |
+| Subheading | Nunito Bold | 17 |
+| Body | Nunito Regular | 16 |
+| Button label | Nunito Bold | 14 |
+| Small / metadata | Nunito SemiBold | 12–14 |
+| Tiny / overline | Nunito Bold | 10–12 |
+
+Nunito is distributed under the SIL Open Font License 1.1. The license text is
+kept with the font files in `assets/fonts/Nunito-OFL.txt`.
 
 ## 4. Component Conventions
 
 - Use `PaperProvider` once at the application root.
 - Shared wrappers in `src/shared/ui` own the app's default appearance:
-  - `AppButton` for primary, secondary and destructive actions.
+  - `AppButton` for primary, secondary, outline, progress/acceptance, dark and
+    destructive actions. `progress` uses `colors.sage`; `dark` uses `colors.ink`
+    and is reserved for the final workout-summary action. All variants are
+    pill-shaped with a minimum content height of 44.
   - `SheetHeaderAction` for compact actions in a navigation header or on either
     side of a sheet title, such as `Cancelar`/`Guardar` or
     `Cancelar`/`Continuar`.
@@ -135,6 +189,16 @@ uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
   - `Card` for grouped content.
   - `LoadingState`, `EmptyState`, `ErrorState` and `ErrorBanner` for state
     communication.
+- Celebratory surfaces use the original illustrations in
+  `src/features/workout-detail/WorkoutSummaryIllustrations.tsx`,
+  `src/shared/ui/CelebrationIllustrations.tsx` and
+  `src/entities/workout/ExerciseThumbnailIllustration.tsx`. Illustrations are
+  decorative: their containers are marked non-interactive, and adjacent text
+  carries the meaning.
+- A screen may replace the native navigation header with an in-screen header
+  when the composition requires it, as Workout Detail does. The in-screen header
+  still exposes a clear back action, a centered title, 44-pixel touch targets
+  and safe-area support.
 - Touchable surfaces use Paper feedback (`Button`, `TouchableRipple`,
   `IconButton`, `Card onPress`, `Chip`).
 - Use a persistent four-destination bottom tab bar for top-level navigation:
@@ -143,8 +207,9 @@ uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
   - bottom tabs for top-level destinations;
   - full-screen stack screens for focused work, except the approved routine creation sheet;
   - Expo Router `formSheet` routes for approved sheets (S2–S5, plus S1 when opened from Routine Detail);
-  - in-app Paper dialogs only for destructive confirmations and brief
-    acknowledgements.
+  - in-app Paper dialogs only for destructive confirmations, brief
+    acknowledgements and the single-field `Aumentar peso` confirmation in
+    Workout Detail.
 - S5 is the full-height routine creation sheet. It has no navigation-header back
   button and places `Cancelar` and `Continuar` on either side of its title. It
   collects the routine name and optional planning; it never renders an exercise
@@ -254,17 +319,49 @@ uses Paper variants with weights adjusted to `600`, `700` or `800` for emphasis.
   performance presentation. Inputs are prefilled with the planned weight when
   recording and with the saved actual values when editing. Neither flow can add,
   remove or skip exercises or sets.
-- Workout Detail presents the saved snapshot and actual sets with the shared
-  workout exercise and statistics components. It exposes an edit action but no
-  delete action or editable date.
-- Pending progression recommendations appear in one compact card between the
-  workout summary and `Ejercicios`. The card uses the sage support surface
-  (`colors.sageSoft`) and a sage `trending-up` icon, titles itself `Progresión`,
-  and lists one advisory row per exercise with its repetitions and target.
-  `Revisar peso` is the primary card action; `Mantener peso` is a secondary
-  action per row. The card is hidden when empty or refreshing, uses no warning
-  or destructive colors, and shows persistence failures inline. No modal,
-  snackbar, badge or success confirmation is used.
+- Workout Detail uses a full-screen celebration composition. The native
+  navigation header is hidden; the route renders a custom in-screen header over
+  a warm illustrated backdrop with botanical corners. The header keeps a
+  44-pixel translucent back circle, a centered `Resumen` title, safe-area support
+  and an optional compact pencil action. It never shows a routine-level
+  destructive action.
+- The hero contains the original dumbbell illustration, the centered
+  `¡Entrenamiento completado!` heading, one short supportive subtitle and the
+  workout date. The exercise, set and repetition totals share one blush
+  statistics strip with rose icons and `${value}` / label pairs. There are no
+  three competing statistic cards.
+- Exercises render as white, generously rounded cards below the
+  `Ejercicios realizados` heading and its lavender count badge. Each collapsed
+  card shows an original thumbnail, the exercise name, planned sets and
+  repetition range, a `Peso usado` pill and a factual completion pill such as
+  `3 de 3 series` or `2 de 3 series`. The completion pill uses the positive
+  lime when complete and the soft sand tone when incomplete; it never repeats a
+  recommendation. Expanding the card reveals the snapshot note and one aligned
+  row per recorded set with actual weight, repetitions and any surplus
+  repetitions. Exercise cards expose no progression actions.
+- A sticky footer above the bottom safe area holds one dark `Finalizar` action
+  with a lime check. It reuses the screen's existing leave behavior and does not
+  introduce a new destination.
+- Pending progression recommendations appear in one `Tu progresión` block
+  between the hero and `Ejercicios realizados`. The block starts with the
+  progress badge and section heading. A single recommendation keeps the full
+  prototype-style card: a lavender surface with sparkles, a trophy, the
+  exercise-name tag, the current planned weight, `¡Superaste tu meta!`, a lime
+  `Objetivo cumplido` tag, a short explanation with the recorded repetitions and
+  the target, and the actions. Multiple recommendations share one compact
+  lavender header (`¡Superaste tus metas!`, the number of exercises and one short
+  explanation) followed by white expandable rows. Each row shows the exercise
+  name, goal indicator, repetitions, current weight and an expand control.
+  Expanding it reveals `Aumentar peso`, `Mantener peso` and `Decidir después`
+  without repeating the long explanation. No recommendation renders no block at
+  all.
+- `Aumentar peso` opens the single-field in-app dialog with an empty
+  `Nuevo peso (kg)` field. The application never suggests, pre-fills or
+  auto-applies an increment. `Mantener peso` persists the keep-weight decision
+  and removes the affected recommendation immediately. `Decidir después`
+  collapses the card or row without persisting anything. The block is omitted
+  while recommendations load or refresh and when evaluation fails. Persistence
+  failures stay inline. No success snackbar, badge or confirmation is used.
 - Workout History groups saved workouts by month, newest first, and shows the
   date, historical routine name and `N ejercicios · N series`. It never includes
   scheduled routines that have not been saved.

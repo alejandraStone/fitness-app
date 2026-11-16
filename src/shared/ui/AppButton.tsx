@@ -4,9 +4,15 @@ import {
 } from 'react-native-paper';
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import { colors, radii } from './theme';
+import { colors, fonts, radii } from './theme';
 
-export type AppButtonVariant = 'primary' | 'secondary' | 'danger';
+export type AppButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'progress'
+  | 'dark'
+  | 'danger';
 
 export interface AppButtonProps {
   label: string;
@@ -16,6 +22,7 @@ export interface AppButtonProps {
   loading?: boolean;
   icon?: ButtonProps['icon'];
   style?: StyleProp<ViewStyle>;
+  contentStyle?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
 }
 
@@ -32,6 +39,21 @@ const variantProps: Record<
     mode: 'contained-tonal',
     buttonColor: colors.secondary,
     textColor: colors.onSecondary,
+  },
+  outline: {
+    mode: 'outlined',
+    buttonColor: 'transparent',
+    textColor: colors.primary,
+  },
+  progress: {
+    mode: 'contained',
+    buttonColor: colors.sage,
+    textColor: colors.onPrimary,
+  },
+  dark: {
+    mode: 'contained',
+    buttonColor: colors.ink,
+    textColor: colors.onInk,
   },
   danger: {
     mode: 'contained',
@@ -54,18 +76,27 @@ export function AppButton({
   loading = false,
   icon,
   style,
+  contentStyle,
   accessibilityLabel,
 }: AppButtonProps) {
   return (
     <Button
       accessibilityLabel={accessibilityLabel ?? label}
-      contentStyle={{ minHeight: 44 }}
+      contentStyle={[{ minHeight: 44 }, contentStyle]}
       disabled={disabled || loading}
       icon={icon}
-      labelStyle={{ fontWeight: '700', letterSpacing: 0.1 }}
+      labelStyle={{
+        fontFamily: fonts.bold,
+        fontWeight: 'normal',
+        letterSpacing: 0.1,
+      }}
       loading={loading}
       onPress={onPress}
-      style={[{ borderRadius: radii.pill }, style]}
+      style={[
+        { borderRadius: radii.pill },
+        variant === 'outline' && { borderColor: colors.primary },
+        style,
+      ]}
       {...variantProps[variant]}
     >
       {label}

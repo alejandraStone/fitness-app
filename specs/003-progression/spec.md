@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-Present advisory progression recommendations derived from saved workout performance. When every set of an exercise reaches its recorded maximum repetition target, Workout Detail presents a compact recommendation to consider increasing the planned weight. The user decides whether to act; the application never changes the routine automatically.
+Present advisory progression recommendations derived from saved workout performance. When every set of an exercise reaches its recorded maximum repetition target, Workout Detail presents the recommendation inside the saved-workout summary: a single pending recommendation uses one full recommendation card, while multiple recommendations share a compact header and expand as separate rows. The user decides whether to enter and confirm a new planned weight, keep the current one or decide later; the application never calculates or applies an increment automatically.
 
 This specification covers progression recommendations only. Progression charts and personal records are not included.
 
@@ -11,9 +11,10 @@ This specification covers progression recommendations only. Progression charts a
 ### In scope
 
 - Evaluate saved workouts for progression recommendations.
-- Show pending recommendations in Workout Detail.
-- Let the user open Routine Detail to review and change the planned weight.
+- Show pending recommendations in Workout Detail inside the saved-workout summary.
+- Let the user enter and confirm a new planned weight from the recommendation.
 - Let the user keep the current planned weight without changing the routine.
+- Let the user postpone the decision without changing the routine.
 - Persist the keep-weight decision locally.
 - Recalculate recommendations when a workout or routine changes.
 - Store all data in SQLite and work offline.
@@ -33,8 +34,9 @@ This specification covers progression recommendations only. Progression charts a
 ## 3. User Stories
 
 - As a user, I want to know when I completed every set at or above the maximum target so that I can decide whether to increase the planned weight.
+- As a user, I want to enter and confirm the weight I choose without the app deciding the increment for me.
 - As a user, I want the recommendation to stay visible near the workout result without interrupting me with repeated popups.
-- As a user, I want to keep the current weight without the routine changing automatically.
+- As a user, I want to keep the current weight or leave the decision for later without the routine changing automatically.
 - As a user, I want the recommendation to remain accurate after I edit a workout or a routine.
 
 ## 4. Definitions
@@ -45,6 +47,8 @@ This specification covers progression recommendations only. Progression charts a
 - **Normalized exercise name**: The historical exercise name after trimming whitespace, applying Unicode NFC normalization, and lowercasing. This is the same identity rule used for previous performance.
 - **Latest session**: The saved workout that is newest for a normalized exercise name. Ordering is `date DESC`, then `savedAt DESC`, then workout identifier ascending. When one workout contains multiple exercises with the same normalized name, the exercise with the lowest display order is used; ties use the lowest exercise identifier.
 - **Keep-weight decision**: A persisted user decision to keep the current planned weight for one workout exercise.
+- **Manual weight increase**: A user-entered and confirmed planned weight, strictly greater than the current planned weight, applied only to the matching current routine exercise.
+- **Postponed recommendation**: A pending recommendation whose row the user collapsed with `Decidir después`. It has no persisted state and remains pending on the next visit.
 - **Pending recommendation**: A qualifying exercise in its latest session whose source routine and current exercise configuration still make the recommendation actionable, and that has no keep-weight decision.
 
 ## 5. Functional Requirements
@@ -102,39 +106,45 @@ A new qualifying workout for the same normalized exercise name creates a new pen
 
 ### FR-04: Presentation in Workout Detail
 
-Workout Detail MUST render one compact recommendation card when at least one pending recommendation exists for the displayed workout.
+Workout Detail MUST present pending recommendations in one `Tu progresión` block placed after the celebratory summary and before `Ejercicios realizados`.
 
-The card MUST be placed after the workout summary card and before the `Ejercicios` section.
+A single pending recommendation MUST use one full recommendation card on a lavender surface. The card MUST show:
 
-The card MUST contain:
+- the exercise name and the current planned weight;
+- a celebratory `¡Superaste tu meta!` heading;
+- an `Objetivo cumplido` indicator that combines a positive icon with text, so color is not the only signal;
+- a short explanation with the recorded repetitions and the maximum target per set;
+- the actions `Aumentar peso`, `Mantener peso` and `Decidir después`.
 
-- The title `Progresión`.
-- The message `Has alcanzado el máximo en estas series. Puedes considerar subir el peso.`
-- One row per pending recommendation, formatted as `{exercise name} · {reps joined with " / "} (objetivo {plannedRepsMax})`.
-- A `Revisar peso` action.
-- A `Mantener peso` action.
+When multiple recommendations are pending, they MUST share one compact lavender header with the trophy artwork, `¡Superaste tus metas!`, the number of exercises and one short explanation. Each recommendation MUST render as a white expandable row. A collapsed row MUST show the exercise name, the `Objetivo cumplido` indicator, the recorded repetitions, the current planned weight and an expand control. Expanding the row MUST reveal the three actions without repeating the long explanation.
 
-Example row: `Sentadilla · 8 / 8 / 9 / 10 (objetivo 8)`.
+Exercise result cards MUST show only the recorded exercise information and MUST NOT duplicate recommendation actions or content.
 
-The card MUST NOT be rendered when no pending recommendation exists. No empty state or placeholder is allowed.
+The application MUST NOT suggest, calculate, prefill or prescribe a specific weight increment.
 
-The feature MUST NOT add a modal, dialog, snackbar, popup, badge, or recommendation content to Record Workout, Home, Workout History, Routine Detail, Progress, or Exercise Progress.
+When no pending recommendation exists, the block MUST NOT render at all. No empty card, placeholder, hint or protagonist section is allowed.
 
-Recommendation evaluation MUST NOT introduce a separate blocking loading state. If evaluation fails, Workout Detail MUST remain usable and the recommendation card MUST be omitted.
+Recommendation evaluation MUST NOT introduce a separate blocking loading state. The block MUST be omitted while recommendations load or refresh and when evaluation fails, and Workout Detail MUST remain usable.
+
+The feature MUST NOT add recommendation content to Record Workout, Home, Workout History, Routine Detail, Progress or Exercise Progress.
 
 ### FR-05: Recommendation actions
 
-`Revisar peso` MUST open Routine Detail for the displayed workout's source routine. It MUST NOT change the routine, resolve the recommendation, or open a specific exercise automatically.
+`Aumentar peso` MUST open an in-app dialog that shows the current planned weight and an empty `Nuevo peso (kg)` field. The dialog MUST validate that the entered value is a finite number greater than the current planned weight and MUST show Spanish feedback otherwise. It MUST NOT prefill or suggest a value.
 
-`Mantener peso` MUST persist a keep-weight decision and remove the affected recommendation from the card immediately. It MUST NOT change the routine or any workout snapshot.
+Confirming the dialog MUST update only the matching current routine exercise's planned weight through the existing routine update rules, preserving its name, sets, target repetitions, notes, order and schedule. It MUST NOT modify saved workouts, historical snapshots or keep-weight decisions. After a successful update, the recommendation MUST disappear immediately because the current planned weight no longer matches the snapshot.
 
-The application MUST prevent duplicate decision submissions and show a busy state while persistence is in progress.
+If the increase cannot be saved, the dialog MUST remain open and show `No se pudo actualizar el peso. Inténtalo de nuevo.` Retry MUST be available.
 
-If persistence fails, the recommendation MUST remain visible and the card MUST show the Spanish error message `No se pudo guardar tu decisión. Inténtalo de nuevo.` Retry MUST be available.
+`Mantener peso` MUST persist a keep-weight decision and remove the affected recommendation from the section immediately. It MUST NOT change the routine or any workout snapshot.
 
-The application MUST NOT calculate, prefill, or prescribe a specific weight increment.
+`Decidir después` MUST collapse the single recommendation card or the affected row and leave the recommendation pending. It MUST NOT persist anything or change the routine or any workout snapshot.
 
-No success snackbar is shown when a decision is saved.
+The application MUST prevent duplicate submissions and show a busy state while persistence is in progress.
+
+If a keep-weight decision cannot be saved, the recommendation MUST remain visible and the section MUST show the Spanish error message `No se pudo guardar tu decisión. Inténtalo de nuevo.` Retry MUST be available.
+
+No success snackbar is shown when a decision or a manual weight increase is saved.
 
 ### FR-06: Persistence
 
@@ -144,7 +154,7 @@ The application MUST persist keep-weight decisions in SQLite, keyed by the stabl
 
 Editing a workout MUST NOT delete its keep-weight decision. Deleting a workout through an authorized internal operation MAY cascade-delete its decisions.
 
-Changing a routine's planned weight MUST NOT create a keep-weight decision; resolution by weight change is derived.
+Changing a routine's planned weight MUST NOT create a keep-weight decision; resolution by weight change is derived. This also applies to a weight confirmed through `Aumentar peso`.
 
 The feature MUST work offline and persist across restarts.
 
@@ -164,13 +174,13 @@ The application MUST NOT display stale recommendations after a successful workou
 
 Every user-facing message MUST be written in Spanish.
 
-The recommendation card and each recommendation row MUST expose accessibility labels that include the exercise name, actual repetitions, and planned maximum.
+The `Tu progresión` heading and each recommendation card or row MUST expose accessibility labels that include the exercise name, current planned weight, actual repetitions, planned maximum and the fact that the objective was met where applicable. The expand or collapse control MUST expose its expanded or collapsed state.
 
-The `Revisar peso` and `Mantener peso` controls MUST have clear accessibility labels and touch targets of at least 44 logical pixels.
+The `Aumentar peso`, `Mantener peso` and `Decidir después` controls MUST have clear accessibility labels and touch targets of at least 44 logical pixels.
 
-The recommendation MUST NOT rely on color alone.
+The recommendation status MUST NOT rely on color alone.
 
-The tone MUST remain calm and advisory. The UI MUST NOT use gamification, celebration language, or warning styling.
+Workout completion may use celebratory imagery and copy. Recommendation actions MUST remain calm and advisory, MUST NOT use warning styling and MUST NOT prescribe an increment.
 
 ## 6. Acceptance Criteria
 
@@ -180,9 +190,9 @@ The tone MUST remain calm and advisory. The UI MUST NOT use gamification, celebr
 
 **When** the user opens that workout's detail,
 
-**Then** the `Progresión` card MUST show the exercise, its actual repetitions, the planned maximum, `Revisar peso`, and `Mantener peso`.
+**Then** the `Tu progresión` block MUST show one full recommendation card with the exercise name, the current planned weight, the `Objetivo cumplido` indicator, the recorded repetitions, the maximum target per set, `Aumentar peso`, `Mantener peso` and `Decidir después`.
 
-**And** no modal or snackbar MUST be shown.
+**And** no modal, dialog or snackbar MUST be shown before the user opens the increase dialog.
 
 ### AC-02: Hide non-qualifying exercises
 
@@ -190,7 +200,7 @@ The tone MUST remain calm and advisory. The UI MUST NOT use gamification, celebr
 
 **When** Workout Detail is shown,
 
-**Then** that exercise MUST NOT appear in the recommendation card.
+**Then** that exercise MUST NOT appear in the `Tu progresión` block.
 
 ### AC-03: Show only the latest session
 
@@ -204,13 +214,13 @@ The tone MUST remain calm and advisory. The UI MUST NOT use gamification, celebr
 
 **Then** its recommendation MUST appear only if the newer workout qualifies.
 
-### AC-04: Group multiple exercises in one card
+### AC-04: Group multiple exercises in one block
 
 **Given** one workout has multiple qualifying exercises,
 
 **When** Workout Detail is shown,
 
-**Then** one `Progresión` card MUST render all pending recommendations as separate rows.
+**Then** one `Tu progresión` block MUST render one shared header and all pending recommendations as separate expandable rows, each expandable independently.
 
 ### AC-05: Resolve through a routine weight change
 
@@ -232,15 +242,23 @@ The tone MUST remain calm and advisory. The UI MUST NOT use gamification, celebr
 
 **Then** no recommendation for that exercise MUST appear.
 
-### AC-07: Open Routine Detail without changing data
+### AC-07: Increase the weight manually
 
 **Given** a pending recommendation is visible,
 
-**When** the user taps `Revisar peso`,
+**When** the user taps `Aumentar peso`,
 
-**Then** Routine Detail MUST open for the source routine.
+**Then** an in-app dialog MUST open with the current planned weight, an empty weight field and a confirmation action.
 
-**And** no planned weight, routine configuration, or saved workout MUST change automatically.
+**And** the application MUST NOT prefill or suggest a new weight.
+
+**When** the user enters a valid value greater than the current weight and confirms,
+
+**Then** only the matching current routine exercise's planned weight MUST change, its other fields and schedule MUST be preserved, the saved workout MUST remain unchanged, and the recommendation MUST disappear.
+
+**When** the user enters an empty, invalid or non-increasing value,
+
+**Then** the dialog MUST show Spanish validation feedback and MUST NOT save.
 
 ### AC-08: Keep the current weight
 
@@ -282,11 +300,31 @@ The tone MUST remain calm and advisory. The UI MUST NOT use gamification, celebr
 
 **Given** the application has no Internet connection,
 
-**When** the user views a recommendation or records a keep-weight decision,
+**When** the user views a recommendation, keeps the current weight or confirms a manual new weight,
 
-**Then** the operation MUST complete locally and the decision MUST persist after restarting.
+**Then** the operation MUST complete locally and any persisted decision MUST survive a restart.
 
 **And** every visible message and accessibility label MUST be in Spanish.
+
+### AC-12: Decide later without changing data
+
+**Given** an expanded pending recommendation,
+
+**When** the user taps `Decidir después`,
+
+**Then** the card or row MUST collapse and the recommendation MUST remain pending.
+
+**And** no routine, workout snapshot or decision MUST change.
+
+### AC-13: No recommendations
+
+**Given** the workout has no pending recommendation,
+
+**When** Workout Detail is shown,
+
+**Then** no empty progression block, card or placeholder MUST render.
+
+**And** no recommendation hint or empty-state section is shown.
 
 ## 7. Dependencies and Assumptions
 
@@ -303,8 +341,10 @@ The tone MUST remain calm and advisory. The UI MUST NOT use gamification, celebr
 
 ## 8. Resolved Decisions
 
-- Recommendations are presented only in Workout Detail for this feature.
+- Recommendations are presented only in Workout Detail for this feature. A single recommendation uses one full card; multiple recommendations share a compact header and separate expandable rows.
 - Pending scope is the latest saved session per normalized exercise name.
 - Recommendations are hidden when the source routine is deleted or the current exercise cannot be matched uniquely.
-- `Mantener peso` is the only secondary action; there is no separate dismiss control.
+- `Aumentar peso` opens a manual-entry dialog and updates the matching current routine exercise through the existing routine update use case. No new persistence or recommendation record is introduced.
+- `Mantener peso` persists the keep-weight decision. `Decidir después` only collapses the card or row and persists nothing.
 - Exercises with zero planned external weight are excluded from recommendations in this feature.
+- The application never suggests a specific increment or pre-fills the new weight.

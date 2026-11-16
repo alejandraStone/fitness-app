@@ -1,6 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
 
+import type { WorkoutSet } from '../../domain/workouts';
 import {
+  formatExerciseUsedWeight,
   formatRepCount,
   formatSetPerformance,
   formatWorkoutActivityCount,
@@ -32,6 +34,21 @@ describe('workout presentation formatting', () => {
     expect(formatSetPerformance(0, 1)).toBe('0 kg · 1 repetición');
     expect(formatRepCount(1)).toBe('1 repetición');
     expect(formatRepCount(8)).toBe('8 repeticiones');
+  });
+
+  it('summarizes a uniform used weight and marks varying set weights', () => {
+    const set = (weightKg: number): WorkoutSet => ({
+      id: `set-${weightKg}`,
+      setNumber: 1,
+      weightKg,
+      reps: 8,
+    });
+
+    expect(formatExerciseUsedWeight([set(50), set(50)])).toBe('50 kg');
+    expect(formatExerciseUsedWeight([set(50), set(52.5)])).toBe(
+      'Varios pesos',
+    );
+    expect(formatExerciseUsedWeight([])).toBe('Sin peso registrado');
   });
 
   it('formats the monthly activity count with singular and plural labels', () => {

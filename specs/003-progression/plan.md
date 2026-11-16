@@ -9,7 +9,7 @@
 - Keep one SQLite connection for the application lifetime. Add Progression services to the existing application-services composition and provider.
 - Present recommendations in Workout Detail through a presentation slot. The Workout Detail feature must not import the Progression feature directly; the route composes both features.
 - Do not add recommendations to Home, Workout History, Record Workout, Routine Detail, Progress or Exercise Progress.
-- Use existing React Native Paper components and design tokens. Do not install additional dependencies.
+- Reuse existing React Native Paper components and design tokens. The approved redesign adds `react-native-svg` for bundled original illustrations and Nunito font files; no gradient, illustration or UI-testing dependency is added.
 - Write code, identifiers, comments and tests in English. Every user-facing message is written in Spanish.
 
 ## 2. Architecture
@@ -21,9 +21,11 @@ Create `src/domain/progression/` with:
 - `models.ts`
   - `ProgressionRecommendation`, containing:
     - `workoutExerciseId: WorkoutExerciseId`;
+    - `routineExerciseId: RoutineExerciseId`, the unique current routine entry;
     - `exerciseName: string`;
     - `repetitions: number[]`, in ascending set-number order;
-    - `plannedRepsMax: number`.
+    - `plannedRepsMax: number`;
+    - `plannedWeightKg: number`, captured in the workout snapshot.
 - `recommendations.ts`
   - `isQualifyingExercise(exercise)`:
     - `plannedWeightKg > 0`;
@@ -129,42 +131,58 @@ Update `migrations.test.ts` expected tables and version. Add persistence tests f
 
 Create `src/features/progression/` with:
 
-- `ProgressionRecommendationCard.tsx`
-  - One `Card` with a `trending-up` icon, the title `Progresión` and the message `Has alcanzado el máximo en estas series. Puedes considerar subir el peso.`
-  - One row per recommendation formatted as `{exercise name} · {reps joined with " / "} (objetivo {plannedRepsMax})`.
-  - A card-level `Revisar peso` action using `AppButton` variant `primary`.
-  - One `Mantener peso` action per row using `AppButton` variant `secondary`.
-  - An inline `ErrorBanner` with the exact decision failure message when persistence fails.
-  - A busy state that disables card actions and shows loading on the affected `Mantener peso` button.
-  - No modal, dialog, snackbar, badge or success confirmation.
-  - No empty card, placeholder or section when there are no pending recommendations.
-  - Use `colors.sageSoft` for the card surface and `colors.sage` for the icon. Do not use warning or destructive colors.
-  - Keep touch targets at least 44 logical pixels by using `AppButton`.
-  - The title uses `accessibilityRole="header"`. The message is normal accessible text. Each row’s text carries the full accessibility label; do not group the card into one accessible element that hides the action buttons.
+- `ProgressionSection.tsx`
+  - One `Tu progresión` block with the shared progress badge and heading, placed between the workout hero and the exercise list.
+  - A single recommendation uses the full prototype-style lavender card: sparkles, trophy, exercise-name tag, current planned weight, `¡Superaste tu meta!`, a lime `Objetivo cumplido` indicator with text and a short explanation with the recorded repetitions and target.
+  - Multiple recommendations use one compact lavender header with the trophy, `¡Superaste tus metas!`, the number of exercises and one short explanation. Each recommendation is a white expandable row showing the exercise name, `Objetivo cumplido`, recorded repetitions, current weight and an expand control. Expanding reveals the three actions without repeating the long explanation.
+  - `Aumentar peso` uses the shared `AppButton` primary variant; `Mantener peso` uses the `outline` variant; `Decidir después` is a text action.
+  - No recommendation renders no block at all. Do not implement an empty message or placeholder.
+  - Inline `ErrorBanner` for the exact keep-weight failure message; busy state disables actions.
+  - No success snackbar or badge.
+  - Keep touch targets at least 44 logical pixels.
+  - Each card or row exposes its expanded state and a full accessibility label including name, current weight, repetitions, target and objective fulfilment.
+- `IncreaseWeightDialog.tsx`
+  - In-app Paper dialog with the current weight, an empty `Nuevo peso (kg)` field, `Cancelar` and `Guardar peso`.
+  - The app never pre-fills or suggests an increment.
+  - Field validation is Spanish and requires a finite value greater than the current weight.
+  - Persistence failures stay in the dialog with `No se pudo actualizar el peso. Inténtalo de nuevo.`
+- `increase-weight-form.ts`
+  - Pure validation helper for the manually entered weight, with unit tests.
 - `recommendation-format.ts`
-  - Pure helpers for the row label and accessibility label.
-  - Row accessibility label: `{exerciseName}: {reps joined with ", "} repeticiones. Objetivo {plannedRepsMax} repeticiones.`
-  - `Mantener peso` accessibility label: `Mantener el peso de {exerciseName}`.
-  - `Revisar peso` accessibility label: `Revisar el peso planificado en la rutina`.
+  - Pure helpers for readable repetition lists, objective text, row accessibility labels and action labels.
 - `index.ts`
-  - Public export for the Workout Detail route.
-- Add tests for formatting and accessibility copy.
+  - Public exports for the Workout Detail route.
+- Add tests for formatting, accessibility copy and manual-weight validation.
+
+Modify `src/entities/workout/WorkoutStatsView.tsx` and `WorkoutExerciseView.tsx`:
+
+- Keep one blush statistics strip with rose icons and the exercise, set and repetition totals.
+- Render each exercise as a white, rounded card with an original thumbnail, name, planned set count, repetition range and used weight.
+- Show a factual completion pill such as `3 de 3 series` or `2 de 3 series`, using the positive lime only when all planned sets are recorded.
+- Expand the card to show its snapshot note and one aligned row per recorded set.
+- Do not duplicate progression actions or content in exercise cards.
 
 Modify `src/features/workout-detail/WorkoutDetailView.tsx`:
 
-- Accept an optional `progressionCard?: ReactNode` prop.
-- Render it after the summary card and before the `Ejercicios` section.
-- Do not import progression domain or feature code.
+- Compose the celebratory hero, one statistics strip, the progression slot and the exercise cards over the illustrated backdrop.
+- Use the original dumbbell illustration, `¡Entrenamiento completado!`, one supportive subtitle and the workout date.
+- Keep the final `Finalizar` action in a sticky footer above the bottom safe area, using the `dark` variant and a lime check.
+- Accept an optional `progressionSection?: ReactNode`; keep the workout feature independent from progression domain and feature imports.
+
+Add `src/features/workout-detail/WorkoutDetailHeader.tsx`, `WorkoutSummaryIllustrations.tsx` and `src/entities/workout/ExerciseThumbnailIllustration.tsx`, plus `src/shared/ui/CelebrationIllustrations.tsx` and `src/shared/ui/theme.ts` tokens/fonts. Load Nunito in `src/app/_layout.tsx` before rendering the app.
 
 Modify `src/app/workouts/[id]/index.tsx`:
 
+- Hide the native header for this route, render the in-screen header inside a safe-area container and keep the back action behavior unchanged.
 - Load Workout Detail and Progression on every focus.
-- Hide the recommendation card while progression is refreshing so a routine or workout edit cannot leave a stale card visible. Clear the previous decision error when recommendations refresh.
-- A progression load failure must leave Workout Detail usable and omit the card. Do not show a separate loading or error state for evaluation.
-- `Revisar peso` opens `/routines/[id]` for `workout.routineId`. It must not open `routines/[id]/edit`, change the routine or resolve the recommendation.
-- `Mantener peso` calls `keepCurrentWeight`, removes the affected row immediately on success and clears any previous decision error. Clear the previous decision error when a new attempt starts.
-- On failure, keep the card and row visible, show `No se pudo guardar tu decisión. Inténtalo de nuevo.` and allow retry.
-- Prevent duplicate decision submissions while a decision is being saved.
+- Omit the progression block while it is refreshing so a routine or workout edit cannot leave stale data visible. Clear the previous decision error when recommendations refresh.
+- A progression load failure must leave Workout Detail usable and omit the block. Do not show a separate loading or error state for evaluation.
+- `Aumentar peso` closes over the recommendation, opens the dialog and on confirmation loads a fresh routine through `useRoutineServices`, then calls the existing `saveRoutineExercise` with every current field and the user-entered `targetWeightKg`.
+- Remove the recommendation immediately after a successful update. Never modify the workout snapshot.
+- `Mantener peso` calls `keepCurrentWeight`, removes the affected recommendation immediately on success and clears any previous decision error.
+- `Decidir después` only collapses the card or row inside `ProgressionSection`; it persists nothing.
+- On keep-weight failure, keep the recommendation visible and show `No se pudo guardar tu decisión. Inténtalo de nuevo.`
+- Prevent duplicate submissions while an operation is being saved.
 - Do not show a success snackbar.
 - Do not change Home, Workout History, Record Workout, Routine Detail, Progress or Exercise Progress.
 
@@ -194,20 +212,23 @@ Modify `src/app/workouts/[id]/index.tsx`:
 
 ### Phase 4 — Workout Detail presentation
 
-- Build the recommendation card and formatting helpers.
-- Add the optional card slot to `WorkoutDetailView`.
-- Wire Workout Detail to load, refresh, keep weight and open Routine Detail.
-- Cover the hidden state, multiple rows, busy state and persistence error.
-- Verify that the card appears between the summary and `Ejercicios`, and that no other screen changes.
+- Build the `Tu progresión` block with the single full card, shared multi header and expandable rows, the increase dialog and formatting helpers.
+- Redesign the workout summary with the illustrated backdrop, custom header, celebratory hero, blush statistics strip, date and exercise cards.
+- Add the original dumbbell, trophy, progress badge, sparkle and exercise-thumbnail illustrations with `react-native-svg`.
+- Add the optional progression slot to `WorkoutDetailView`.
+- Wire Workout Detail to load, refresh, keep weight, postpone locally and update the routine weight manually.
+- Cover the no-recommendation state, single recommendation, multiple recommendations, busy state and persistence errors.
+- Verify that exercise cards do not duplicate recommendation actions and that no other screen changes.
 
 ### Phase 5 — Documentation and verification
 
 - Update `docs/architecture/database.md` with the decision table, relationship and deletion policy, and clarify that recommendations remain derived.
-- Update `docs/desing/screens.md` with the Workout Detail recommendation card and narrow the remaining progression presentation decision to Progress and Home.
-- Update `docs/desing/design-system.md` with the recommendation card’s calm sage presentation and action hierarchy.
+- Update `docs/desing/screens.md` with the final Workout Detail composition and progression interactions.
+- Update `docs/desing/design-system.md` with the palette, Nunito typography, illustrations, card composition and action variants.
 - Update `specs/003-progression/tasks.md` statuses as work completes.
 - Run type checking, linting, the automated test suite and a web export.
-- Verify the main flows manually at 390×844 and, when available, on an iOS or Android device.
+- Verify the main flows interactively at 393×852, including responsive checks at 360×740 and 320×640.
+- Verify on an iOS or Android device or emulator when available; otherwise document the blocker.
 
 ## 4. Testing Strategy
 
@@ -236,21 +257,28 @@ Modify `src/app/workouts/[id]/index.tsx`:
   - file-backed persistence across restart;
   - `findAll` ordering and completeness.
 - Presentation helpers:
-  - row formatting with spaces around `/`;
-  - objective text;
-  - accessibility labels include name, repetitions and planned maximum.
-  - Do not add a UI testing dependency; cover presentation helpers with unit tests and verify the card states manually, consistent with the existing project test setup.
+  - readable repetition lists and objective text;
+  - accessibility labels include name, current weight, repetitions and planned maximum;
+  - manual weight validation accepts increases and rejects empty, invalid or non-increasing values.
+  - Do not add a UI testing dependency; cover presentation helpers with unit tests and verify the block states interactively, consistent with the existing project test setup.
 - Manual flows:
-  - save a qualifying workout and confirm the card appears between the summary and `Ejercicios`;
-  - confirm no card appears when no exercise qualifies;
+  - save a qualifying workout and confirm the celebratory hero, statistics strip, date and `Tu progresión` block render between the header and the exercise cards;
+  - confirm one pending recommendation uses the full trophy card;
+  - confirm no pending recommendation renders no progression block or empty hint;
   - confirm a newer session hides the older workout’s recommendation;
-  - confirm multiple exercises render as separate rows in one card;
-  - tap `Mantener peso`, confirm the row disappears immediately, restart and confirm it remains hidden;
-  - tap `Revisar peso`, confirm Routine Detail opens without data changes;
-  - change the planned weight, return and confirm the card disappears;
-  - restore the snapshot weight and confirm the card is eligible again;
-  - edit a workout below the maximum and confirm the card disappears; edit it back and confirm it returns unless a decision exists;
+  - confirm multiple recommendations share one header and render separate expandable rows;
+  - confirm exercise cards show planned sets/reps, used weight and per-set results, and do not repeat recommendation actions;
+  - confirm incomplete exercise data shows the recorded set count, `Sin peso registrado` where applicable and no recommendation;
+  - tap `Mantener peso`, confirm the recommendation disappears immediately, restart and confirm it remains hidden;
+  - tap `Aumentar peso`, confirm the dialog starts empty and rejects values at or below the current weight;
+  - enter a higher weight, confirm the routine changes only in its planned weight and the recommendation disappears;
+  - reload Workout Detail and confirm the workout snapshot is unchanged;
+  - tap `Decidir después` and confirm the card or row collapses and remains pending on the next visit;
+  - restore the snapshot weight and confirm the recommendation is eligible again;
+  - edit a workout below the maximum and confirm the block disappears; edit it back and confirm it returns unless a decision exists;
   - delete the source routine and confirm no recommendation is shown;
+  - verify the layout at 393×852, 360×740 and 320×640 without horizontal overflow;
+  - verify `Finalizar` navigates back and falls back to Workout History;
   - run without network access;
   - verify Spanish copy, accessibility labels and 44-pixel touch targets.
 - Commands:
@@ -262,17 +290,19 @@ Modify `src/app/workouts/[id]/index.tsx`:
 ## 5. Completion Criteria
 
 - All acceptance criteria in `specs/003-progression/spec.md` pass.
-- The recommendation card appears only in Workout Detail, only for pending recommendations.
+- The `Tu progresión` block appears only in Workout Detail, only for pending recommendations, and is omitted entirely when none exist.
+- One pending recommendation renders the full card; multiple pending recommendations share one header and render separate expandable rows.
 - Only the latest session per normalized exercise name can produce a recommendation.
 - Eligibility uses the saved workout snapshot and actual repetitions only.
 - The current routine must exist, match exactly one exercise by normalized name and preserve the snapshot planned weight with exact numeric equality.
 - Only keep-weight decisions are persisted; recommendations are never duplicated in the database.
-- `Mantener peso` hides the row immediately and survives restarts.
-- `Revisar peso` opens Routine Detail without changing data.
-- Decision failures keep the row visible and show the exact Spanish message.
-- No automatic weight changes, specific increments, modals, snackbars, badges, Home content or Progress content are introduced.
+- `Mantener peso` removes the recommendation immediately and survives restarts.
+- `Aumentar peso` updates only the matching routine exercise after manual entry and confirmation, and leaves the historical workout unchanged.
+- `Decidir después` collapses the card or row and persists nothing.
+- Decision and increase failures keep their context visible and show the exact Spanish messages.
+- No automatic weight changes, specific increments, success snackbars or badges are introduced. No recommendation content appears on Home or Progress.
 - No UI component accesses SQLite or repositories directly.
-- No backend, authentication, cloud storage, synchronization or new dependency is introduced.
+- No backend, authentication, cloud storage or synchronization is introduced. `react-native-svg` and the bundled Nunito fonts are the only approved presentation dependencies.
 - `npm run typecheck`, `npm run lint`, `npm test -- --runInBand` and `npx expo export --platform web` pass without new errors.
 - Native iOS/Android verification is completed when a suitable device or emulator is available; otherwise the blocked status is documented explicitly.
 
@@ -282,7 +312,9 @@ Modify `src/app/workouts/[id]/index.tsx`:
 - `findAll` performs per-workout exercise and set reads. Keep it simple for V1; do not introduce a second read model or cache without measured need.
 - Weight equality must use exact comparison of stored numeric values, never formatted text. Editing and restoring the same value must restore eligibility.
 - Duplicate exercise names inside a routine or workout must hide the recommendation rather than choosing an arbitrary entry.
-- The card must be hidden while recommendations refresh to avoid showing stale data after a routine edit.
-- A routine can be deleted after the card loads. `Revisar peso` may then open Routine Detail with its existing not-found handling; no special fallback is required.
+- The progression block must be hidden while recommendations refresh to avoid showing stale data after a routine edit.
+- A routine can be deleted after the block loads. The user cannot open it from the block; a stale increase attempt must fail safely with a Spanish message and must not modify data.
+- The manual increase reuses `saveRoutineExercise`, so validation, ordering, notes and schedule preservation stay owned by the routine application layer.
+- The dialog must never prefill a weight and must reject values that do not increase the current planned weight.
 - The migration must remain append-only and must not modify or reset existing data.
 - Native visual and interaction verification remains necessary after automated checks pass and may be blocked when no device or emulator is available.

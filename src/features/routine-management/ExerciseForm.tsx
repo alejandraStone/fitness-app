@@ -1,9 +1,4 @@
-import {
-  forwardRef,
-  useCallback,
-  useImperativeHandle,
-  useState,
-} from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 import { Keyboard, StyleSheet, View } from 'react-native';
 import { Button } from 'react-native-paper';
 
@@ -120,7 +115,7 @@ export const ExerciseForm = forwardRef<ExerciseFormHandle, ExerciseFormProps>(
             setName(value);
             setErrors([]);
           }}
-          placeholder="p. ej. Sentadilla"
+          placeholder="Nombre del ejercicio"
           value={name}
         />
 
@@ -185,7 +180,7 @@ export const ExerciseForm = forwardRef<ExerciseFormHandle, ExerciseFormProps>(
         <AppTextInput
           editable={!isBusy}
           error={fieldError('notes')}
-          label="Nota (opcional)"
+          label="Nota"
           multiline
           onChangeText={(value) => {
             setNotes(value);

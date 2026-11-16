@@ -7,6 +7,7 @@
  * Requirements: `specs/003-progression/spec.md` FR-01 to FR-04.
  */
 
+import type { RoutineExerciseId } from '../routines';
 import type { WorkoutExerciseId } from '../workouts';
 
 /**
@@ -18,10 +19,14 @@ import type { WorkoutExerciseId } from '../workouts';
 export interface ProgressionRecommendation {
   /** Stable identifier of the workout exercise that produced the recommendation. */
   workoutExerciseId: WorkoutExerciseId;
+  /** Stable identifier of the matching current routine exercise. */
+  routineExerciseId: RoutineExerciseId;
   /** Exercise name captured in the saved workout snapshot. */
   exerciseName: string;
   /** Actual repetitions in ascending set-number order. */
   repetitions: number[];
   /** Maximum repetition target captured in the saved workout snapshot. */
   plannedRepsMax: number;
+  /** Planned external weight captured in the saved workout snapshot. */
+  plannedWeightKg: number;
 }

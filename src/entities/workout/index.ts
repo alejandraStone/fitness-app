@@ -6,6 +6,7 @@
  */
 export {
   formatExerciseCount,
+  formatExerciseUsedWeight,
   formatRepCount,
   formatSetPerformance,
   formatWorkoutActivityCount,

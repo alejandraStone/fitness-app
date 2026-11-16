@@ -182,9 +182,17 @@ Requirements:
 - A qualifying recommendation is presented after saving the workout.
 - A pending recommendation remains accessible alongside the latest session result until resolved or no longer applicable.
 - The recommendation is not repeatedly displayed as a new popup every time the recording screen opens.
-- The user can open routine editing to enter and confirm a new planned weight.
-- Changing the planned weight affects the current routine and its future scheduled occurrences, not historical workouts.
-- Dismissing the recommendation or deciding to keep the weight does not change the routine.
+- The recommendation is presented inside the saved workout summary. A single
+  pending recommendation uses one full recommendation card associated with its
+  exercise; multiple pending recommendations share one compact header and render
+  as expandable rows. Expanding reveals the recorded repetitions, the target and
+  the available actions. Exercise result cards do not repeat recommendation
+  content.
+- The user can choose `Aumentar peso`, enter the new planned weight manually in a dialog and confirm it. The application never calculates, pre-fills or prescribes the increment.
+- The user can choose `Mantener peso` to keep the current planned weight.
+- The user can choose `Decidir después` to leave the recommendation pending without changing anything.
+- Confirming a new planned weight affects the current routine and its future scheduled occurrences, not historical workouts.
+- Keeping the current weight or deciding later does not change the routine.
 - If the saved workout is edited and no longer meets the recommendation criteria, the pending recommendation is withdrawn.
 
 ### 3.8. Progression Charts

@@ -238,10 +238,51 @@ describe('findPendingRecommendations', () => {
     expect(pending(workout, [workout])).toEqual([
       {
         workoutExerciseId: 'workout-exercise-1',
+        routineExerciseId: 'routine-exercise-1',
         exerciseName: 'Sentadilla',
         repetitions: [8, 9, 10],
         plannedRepsMax: 8,
+        plannedWeightKg: 50,
       },
+    ]);
+  });
+
+  it('returns one recommendation per qualifying exercise', () => {
+    const squat = createExercise();
+    const press = createExercise({
+      id: 'workout-exercise-2',
+      nameSnapshot: 'Prensa',
+      order: 1,
+      plannedRepsMax: 8,
+      plannedWeightKg: 80,
+      sets: [
+        createSet({ id: 'press-set-1', setNumber: 1, reps: 10 }),
+        createSet({ id: 'press-set-2', setNumber: 2, reps: 10 }),
+        createSet({ id: 'press-set-3', setNumber: 3, reps: 10 }),
+      ],
+    });
+    const workout = createWorkout({ exercises: [squat, press] });
+    const routine = createRoutine({
+      exercises: [
+        createRoutineExercise(),
+        createRoutineExercise({
+          id: 'routine-exercise-2',
+          name: 'Prensa',
+          order: 1,
+          targetWeightKg: 80,
+        }),
+      ],
+    });
+
+    expect(pending(workout, [workout], routine)).toEqual([
+      expect.objectContaining({
+        workoutExerciseId: 'workout-exercise-1',
+        routineExerciseId: 'routine-exercise-1',
+      }),
+      expect.objectContaining({
+        workoutExerciseId: 'workout-exercise-2',
+        routineExerciseId: 'routine-exercise-2',
+      }),
     ]);
   });
 
@@ -336,6 +377,26 @@ describe('findPendingRecommendations', () => {
     expect(pending(workout, [workout], routine)).toHaveLength(1);
   });
 
+  it('links the recommendation to the matching routine exercise and snapshot weight', () => {
+    const workout = createWorkout();
+    const routine = createRoutine({
+      exercises: [
+        createRoutineExercise({
+          id: 'routine-exercise-matched',
+          targetWeightKg: 50,
+        }),
+      ],
+    });
+
+    expect(pending(workout, [workout], routine)).toEqual([
+      expect.objectContaining({
+        workoutExerciseId: 'workout-exercise-1',
+        routineExerciseId: 'routine-exercise-matched',
+        plannedWeightKg: 50,
+      }),
+    ]);
+  });
+
   it('hides recommendations when the source routine no longer exists', () => {
     const workout = createWorkout();
 
@@ -405,9 +466,11 @@ describe('findPendingRecommendations', () => {
     ).toEqual([
       {
         workoutExerciseId: 'workout-exercise-2',
+        routineExerciseId: 'routine-exercise-2',
         exerciseName: 'Prensa',
         repetitions: [10, 10, 10],
         plannedRepsMax: 8,
+        plannedWeightKg: 80,
       },
     ]);
   });

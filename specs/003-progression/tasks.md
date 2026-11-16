@@ -181,13 +181,34 @@
 
 ### T014 — Verify user flows
 
-- Verify the card placement, hidden state, multiple rows, `Mantener peso` persistence, `Revisar peso` navigation, weight-change resolution, workout-edit recalculation and routine deletion.
-- Verify Spanish copy, accessibility labels and offline behavior.
-- Run the web verification at 390×844.
+- Verify the final composition for one recommendation, multiple recommendations, no recommendations and incomplete exercise data.
+- Verify `Mantener peso` persistence, `Aumentar peso` manual entry and validation, `Decidir después` collapse, workout-edit recalculation and routine deletion.
+- Verify exercise cards, sticky `Finalizar` navigation, Spanish copy, accessibility labels and offline behavior.
+- Run the web verification at 393×852 and responsive checks at 360×740 and 320×640.
 - Verify on iOS or Android when a suitable device or emulator is available; otherwise document the blocker.
 
 **Depends on:** T013.
 
 **Verify:** Every acceptance criterion in `specs/003-progression/spec.md` is covered by automated tests and/or executed verification.
 
-**Status:** Blocked (2026-11-12). Automated coverage passes, but interactive verification at 390×844 and on a native device or emulator was not executed. This environment has no browser automation or connected Android/iOS device; installing a UI testing dependency is outside the approved plan. The remaining manual verification must be completed when suitable tooling or a device is available.
+**Status:** Partially completed (2026-11-16). Automated coverage passes (53 suites / 339 tests). Interactive Chrome verification at 393×852 covered the single-card, multi-row, zero-recommendation, incomplete-set, dialog validation, keep-weight, increase-weight, postpone, collapsed/expanded and final-navigation flows. Layouts at 360×740 and 320×640 have no horizontal overflow. Native iOS/Android verification remains blocked because no emulator or connected device is available in this environment.
+
+## Phase 6 — Workout Detail redesign
+
+### T015 — Redesign Workout Detail and add manual weight increase
+
+- Replace the previous summary composition with the warm celebratory hero, illustrated backdrop, in-screen header, blush statistics strip, date and sticky `Finalizar` action.
+- Present a single recommendation as the full trophy card; present multiple recommendations with one compact header and separate expandable rows. Omit the block entirely when no recommendation is pending.
+- Add `Aumentar peso` through a manual-entry dialog, plus `Mantener peso` and `Decidir después`.
+- Update the current routine exercise through the existing `saveRoutineExercise` use case without changing historical snapshots.
+- Convert exercise results into white expandable cards with thumbnail, planned sets/reps, used weight, factual completion pill, note and per-set results. Do not repeat recommendation actions in exercise cards.
+- Add `routineExerciseId` and `plannedWeightKg` to the derived recommendation model.
+- Add the `outline` and `dark` button variants, Nunito font tokens and bundled weights, and original SVG illustrations.
+- Add `react-native-svg` `15.16.0` and the SIL OFL 1.1 license file.
+- Update the progression spec, plan, PRD and design documents.
+
+**Depends on:** T011.
+
+**Verify:** All composition states render coherently; the manual weight increase validates and persists correctly; no snapshot, schema or algorithm rule changes; existing actions still work.
+
+**Status:** Completed (2026-11-16). Implemented the final celebratory composition, illustrations, typography, single-card/multi-row progression states, manual increase dialog and exercise cards. `npm test -- --runInBand` passes 53 suites / 339 tests; `npm run typecheck` and `npm run lint` pass. Web verification is complete. Native visual verification remains blocked under T014 because no emulator or connected device is available.

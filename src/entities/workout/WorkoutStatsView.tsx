@@ -1,8 +1,11 @@
+import { Fragment } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Icon, Text } from 'react-native-paper';
 
 import type { WorkoutSummary } from '../../domain/workouts';
-import { colors, radii, spacing } from '../../shared/ui/theme';
+import { formatSetCount } from '../routine/format';
+import { colors, fonts, radii, spacing } from '../../shared/ui/theme';
+import { formatExerciseCount, formatRepCount } from './format';
 
 /** Saved-workout totals displayed by Workout Detail and Workout History. */
 export type WorkoutStats = Pick<
@@ -15,78 +18,86 @@ export interface WorkoutStatsViewProps {
 }
 
 /**
- * Read-only summary of the exercises, sets and repetitions recorded in a
- * saved workout.
+ * Single compact strip with the exercise, set and repetition totals.
+ *
+ * The three figures share one soft blush container instead of competing cards.
  */
 export function WorkoutStatsView({ stats }: WorkoutStatsViewProps) {
-  return (
-    <View style={styles.row}>
-      <SummaryStat
-        icon="dumbbell"
-        label="Ejercicios"
-        value={stats.exerciseCount}
-      />
-      <SummaryStat icon="layers-outline" label="Series" value={stats.totalSets} />
-      <SummaryStat
-        accessibilityLabel={`Repeticiones totales: ${stats.totalReps}`}
-        icon="repeat"
-        label="Reps"
-        value={stats.totalReps}
-      />
-    </View>
-  );
-}
+  const values = [
+    {
+      icon: 'dumbbell',
+      label: stats.exerciseCount === 1 ? 'Ejercicio' : 'Ejercicios',
+      value: stats.exerciseCount,
+    },
+    {
+      icon: 'layers-outline',
+      label: stats.totalSets === 1 ? 'Serie' : 'Series',
+      value: stats.totalSets,
+    },
+    {
+      icon: 'repeat',
+      label: stats.totalReps === 1 ? 'Repetición' : 'Repeticiones',
+      value: stats.totalReps,
+    },
+  ] as const;
 
-interface SummaryStatProps {
-  icon: string;
-  label: string;
-  value: number;
-  accessibilityLabel?: string;
-}
-
-function SummaryStat({
-  icon,
-  label,
-  value,
-  accessibilityLabel,
-}: SummaryStatProps) {
   return (
     <View
-      accessibilityLabel={accessibilityLabel ?? `${label}: ${value}`}
+      accessibilityLabel={`${formatExerciseCount(
+        stats.exerciseCount,
+      )}, ${formatSetCount(stats.totalSets)}, ${formatRepCount(
+        stats.totalReps,
+      )}`}
       accessible
-      style={styles.stat}
+      style={styles.strip}
     >
-      <Icon color={colors.primary} size={20} source={icon} />
-      <Text style={styles.value} variant="titleLarge">
-        {value}
-      </Text>
-      <Text style={styles.label} variant="labelSmall">
-        {label}
-      </Text>
+      {values.map((item, index) => (
+        <Fragment key={item.label}>
+          {index === 0 ? null : <View style={styles.divider} />}
+          <View style={styles.stat}>
+            <Icon color={colors.rose} size={20} source={item.icon} />
+            <Text style={styles.value}>{item.value}</Text>
+            <Text style={styles.label}>{item.label}</Text>
+          </View>
+        </Fragment>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
+  strip: {
+    alignItems: 'center',
+    backgroundColor: colors.blush,
+    borderRadius: radii.xl,
     flexDirection: 'row',
-    gap: spacing.sm,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.md,
   },
   stat: {
-    flex: 1,
     alignItems: 'center',
-    gap: 2,
-    borderRadius: radii.md,
-    backgroundColor: colors.surfaceMuted,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.sm,
+    flex: 1,
+    gap: 1,
+    justifyContent: 'center',
+    minHeight: 72,
+  },
+  divider: {
+    backgroundColor: 'rgba(176, 81, 104, 0.16)',
+    height: 50,
+    width: 1,
   },
   value: {
     color: colors.text,
-    fontWeight: '800',
+    fontFamily: fonts.extraBold,
+    fontSize: 22,
+    fontWeight: 'normal',
+    letterSpacing: -0.3,
+    lineHeight: 26,
   },
   label: {
     color: colors.textMuted,
-    textAlign: 'center',
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    fontWeight: 'normal',
   },
 });

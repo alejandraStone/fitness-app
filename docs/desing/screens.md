@@ -14,7 +14,7 @@ These rules apply to every screen and are not repeated below.
 3. A routine scheduled for a date through both a recurring weekday and a one-time assignment appears once. Different routines may share a date.
 4. History is shown from saved workouts and their snapshots, never reconstructed from the current routine configuration.
 5. Editing a routine, renaming or removing an exercise entry, or permanently deleting a routine never modifies saved workouts.
-6. Recorded weight never updates a routine's planned weight. The app may suggest an increase; the user changes the planned weight manually in the routine.
+6. Recorded weight never updates a routine's planned weight automatically. The app may recommend considering an increase; the user enters and confirms the new planned weight manually in Workout Detail.
 7. A saved workout cannot be deleted in V1. Editing one updates every derived metric, personal record and progression suggestion that depends on it.
 
 ---
@@ -137,28 +137,37 @@ Records actual performance for an existing routine on a selected date.
 
 A saved workout's historical record. It is the destination right after a successful save and is also reachable from Workout History and from `Ver entrenamiento` on Home.
 
-Contains:
-- workout date;
-- routine name as recorded in the snapshot;
-- recorded exercises in their historical order;
-- exercise notes and planned sets, target repetition range and planned weight from the snapshot;
-- actual weight and repetitions for every recorded set;
-- summary of exercise count, total sets and total repetitions;
-- action to edit the recorded performance;
-- pending progression recommendations when they exist.
+The screen uses a celebratory full-screen composition over a warm illustrated backdrop. The native navigation header is hidden and replaced by an in-screen header with a translucent back circle, a centered `Resumen` title, safe-area support and an optional compact pencil action for editing the record.
 
-The detail stays readable if the source routine was edited or permanently deleted, because every displayed value comes from the saved snapshot. The workout date is not editable and no delete action is exposed. The screen reloads on focus so edits and routine changes appear immediately, and provides Spanish loading, not-found and retryable error states.
+Contains:
+- a celebratory hero with an original dumbbell illustration, the heading `¡Entrenamiento completado!` and one short supportive subtitle;
+- the workout date below the hero;
+- one blush statistics strip with the exercise, set and repetition totals, each with a rose icon and label;
+- a single progression block between the hero and the exercise list when recommendations are pending;
+- the `Ejercicios realizados` heading with a lavender count badge;
+- one white, rounded exercise card per recorded exercise, in historical order and without numbering;
+- in each collapsed exercise card: an original thumbnail, the exercise name, planned sets and repetition range, the weight actually used and a factual completion pill such as `3 de 3 series`;
+- expanding a card reveals its snapshot note and one row per recorded set with the actual weight and repetitions;
+- a sticky `Finalizar` action in dark ink with a lime check, above the bottom safe area;
+- no routine-level delete action and no editable workout date.
+
+The completion pill uses the positive lime when every planned set has a recorded result and the soft sand tone otherwise. It never duplicates a recommendation or prescribes an increment. Exercise cards expose no `Aumentar peso`, `Mantener peso` or `Decidir después` actions.
+
+The detail stays readable if the source routine was edited or permanently deleted, because every displayed value comes from the saved snapshot. The screen reloads on focus so edits and routine changes appear immediately, and provides Spanish loading, not-found and retryable error states. `Finalizar` reuses the screen's leave behavior: it returns to the previous screen when possible and otherwise opens Workout History.
 
 ### Progression recommendations
 
-When pending recommendations exist, one compact `Progresión` card appears between the workout summary and `Ejercicios`.
+When pending recommendations exist, one `Tu progresión` block appears between the hero and `Ejercicios realizados`. It starts with the progress badge and section heading.
 
-- The card explains that the maximum was reached and that the user may consider increasing the weight. It never changes the planned weight automatically or prescribes a specific increment.
-- Each recommendation shows the exercise name, the actual repetitions and the snapshot's maximum target.
-- `Revisar peso` opens Routine Detail so the user can review and change the planned weight manually.
-- `Mantener peso` stores the decision for that saved exercise, removes the row immediately and survives restarts.
-- The card is hidden when no recommendation is pending and while recommendations refresh. It also stays hidden when the source routine was deleted, the current planned weight differs from the snapshot, the routine has no unique matching exercise, a newer session exists or a keep-weight decision was already made.
-- A decision failure keeps the row visible, shows the inline message `No se pudo guardar tu decisión. Inténtalo de nuevo.` and allows retry. No success snackbar, modal or badge is used.
+- A single recommendation uses the full recommendation card on a lavender surface with sparkles and a trophy. It shows the exercise name, current planned weight, `¡Superaste tu meta!`, a lime `Objetivo cumplido` indicator, a short explanation with the recorded repetitions and target, and the actions `Aumentar peso`, `Mantener peso` and `Decidir después`.
+- Multiple recommendations share one compact lavender header (`¡Superaste tus metas!`, the number of exercises and one short explanation) followed by white expandable rows. Each collapsed row shows the exercise name, `Objetivo cumplido`, the recorded repetitions, the current planned weight and an expand control. Expanding a row reveals the available actions without repeating the long explanation.
+- `Aumentar peso` opens an in-app dialog with an empty weight field. The dialog shows the current weight, asks for the new weight and confirms it before saving. The application never suggests, pre-fills or calculates an increment. The entered value must be a valid number greater than the current weight.
+- Confirming `Aumentar peso` updates only the matching current routine exercise's planned weight, preserving its name, sets, target repetitions, notes, order and schedule. The saved workout snapshot is never modified. The recommendation disappears immediately because the current planned weight no longer matches the snapshot.
+- `Mantener peso` stores the keep-weight decision for that saved exercise, removes the recommendation immediately and survives restarts.
+- `Decidir después` collapses the single card or the affected row and leaves the recommendation pending. It persists nothing and changes neither the routine nor the workout.
+- When no recommendation is pending, the block is omitted entirely. No empty card, placeholder, hint or protagonist section is rendered.
+- The block is hidden while recommendations load or refresh, and when evaluation fails. It also stays hidden when the source routine was deleted, the current planned weight differs from the snapshot, the routine has no unique matching exercise, a newer session exists or a keep-weight decision was already made.
+- A keep-weight failure keeps the recommendation visible, shows the inline message `No se pudo guardar tu decisión. Inténtalo de nuevo.` and allows retry. An increase failure keeps the dialog open with `No se pudo actualizar el peso. Inténtalo de nuevo.` No success snackbar, modal confirmation or badge is used.
 - Recommendations are not shown on Home, Workout History, Record Workout or Routine Detail.
 
 ### Editing a saved workout

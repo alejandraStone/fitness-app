@@ -132,9 +132,11 @@ export function findPendingRecommendations(
 
     recommendations.push({
       workoutExerciseId: exercise.id,
+      routineExerciseId: routineMatches[0].id,
       exerciseName: exercise.nameSnapshot,
       repetitions: orderSets(exercise.sets).map((set) => set.reps),
       plannedRepsMax: exercise.plannedRepsMax,
+      plannedWeightKg: exercise.plannedWeightKg,
     });
   }
 

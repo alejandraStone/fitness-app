@@ -2,6 +2,11 @@
  * Public interface of the progression feature.
  */
 export {
-  ProgressionRecommendationCard,
-  type ProgressionRecommendationCardProps,
-} from './ProgressionRecommendationCard';
+  IncreaseWeightDialog,
+  type IncreaseWeightDialogProps,
+} from './IncreaseWeightDialog';
+export {
+  ProgressionSection,
+  type ProgressionSectionProps,
+  type ProgressionStatus,
+} from './ProgressionSection';

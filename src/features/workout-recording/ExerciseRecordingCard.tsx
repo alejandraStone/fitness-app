@@ -62,7 +62,7 @@ export function ExerciseRecordingCard({
         {index + 1}. {exercise.nameSnapshot}
       </Text>
       <Text style={styles.meta} variant="bodySmall">
-        Planificado: {formatSetCount(exercise.plannedSets)} ·{' '}
+        {formatSetCount(exercise.plannedSets)} ·{' '}
         {formatRepRange(exercise.plannedRepsMin, exercise.plannedRepsMax)} ·{' '}
         {formatWeightKg(exercise.plannedWeightKg)}
       </Text>

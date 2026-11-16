@@ -1,5 +1,5 @@
 import type { DateOnly } from '../../domain/routines';
-import type { WorkoutSummary } from '../../domain/workouts';
+import type { WorkoutSet, WorkoutSummary } from '../../domain/workouts';
 import { formatFullDate } from '../calendar/format';
 import {
   formatRepRange,
@@ -25,6 +25,25 @@ export function formatRepCount(count: number): string {
 /** Formats one recorded set as `80 kg · 8 repeticiones`. */
 export function formatSetPerformance(weightKg: number, reps: number): string {
   return `${formatWeightKg(weightKg)} · ${formatRepCount(reps)}`;
+}
+
+/**
+ * Formats the actual weight used across one exercise.
+ *
+ * A uniform weight is summarized directly; different weights stay explicit in
+ * the expanded set rows.
+ */
+export function formatExerciseUsedWeight(
+  sets: readonly WorkoutSet[],
+): string {
+  if (sets.length === 0) {
+    return 'Sin peso registrado';
+  }
+
+  const firstWeight = sets[0].weightKg;
+  return sets.every((set) => set.weightKg === firstWeight)
+    ? formatWeightKg(firstWeight)
+    : 'Varios pesos';
 }
 
 /** Formats the concise history summary `N ejercicios · N series`. */

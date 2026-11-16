@@ -221,7 +221,7 @@ export default function EditRoutineNameScreen() {
                 setNameError(null);
                 setFormError(null);
               }}
-              placeholder="p. ej. Piernas A"
+              placeholder="ej. Tren superior, Rutina de piernas"
               returnKeyType="done"
               value={name}
             />

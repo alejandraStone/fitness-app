@@ -6,7 +6,7 @@ import type {
 import { View } from 'react-native';
 import { HelperText, TextInput } from 'react-native-paper';
 
-import { colors, radii, spacing } from './theme';
+import { colors, fonts, radii, spacing } from './theme';
 
 type SupportedTextInputProps = Pick<
   TextInputProps,
@@ -28,6 +28,7 @@ export interface AppTextInputProps extends SupportedTextInputProps {
   error?: string;
   multiline?: boolean;
   style?: StyleProp<TextStyle>;
+  contentStyle?: StyleProp<TextStyle>;
 }
 
 /** Shared outlined text input with Paper styling and field-level feedback. */
@@ -35,6 +36,7 @@ export function AppTextInput({
   label,
   error,
   style,
+  contentStyle,
   multiline = false,
   ...inputProps
 }: AppTextInputProps) {
@@ -43,6 +45,7 @@ export function AppTextInput({
       <TextInput
         activeOutlineColor={colors.primary}
         accessibilityLabel={inputProps.accessibilityLabel ?? label}
+        contentStyle={[{ fontFamily: fonts.regular }, contentStyle]}
         error={error !== undefined}
         label={label}
         mode="outlined"

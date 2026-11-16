@@ -1,3 +1,4 @@
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import type { NativeStackNavigationOptions } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -31,6 +32,17 @@ function sheetOptions(
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Nunito_400Regular: require("../../assets/fonts/Nunito_400Regular.ttf"),
+    Nunito_600SemiBold: require("../../assets/fonts/Nunito_600SemiBold.ttf"),
+    Nunito_700Bold: require("../../assets/fonts/Nunito_700Bold.ttf"),
+    Nunito_800ExtraBold: require("../../assets/fonts/Nunito_800ExtraBold.ttf"),
+  });
+
+  if (!fontsLoaded && fontError === null) {
+    return null;
+  }
+
   return (
     <SafeAreaProvider>
       <PaperProvider theme={appTheme}>
@@ -66,7 +78,7 @@ export default function RootLayout() {
             />
             <Stack.Screen
               name="workouts/[id]/index"
-              options={{ title: "Entrenamiento" }}
+              options={{ headerShown: false, title: "Entrenamiento" }}
             />
             <Stack.Screen
               name="workouts/[id]/edit"

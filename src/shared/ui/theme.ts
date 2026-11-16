@@ -4,54 +4,54 @@ import { MD3LightTheme, type MD3Theme } from 'react-native-paper';
  * Application visual language.
  *
  * React Native Paper (MIT) provides the component primitives. The theme below
- * gives them a calm, editorial identity suitable for a personal training app:
- * warm neutral surfaces, deep plum text and a rosewood accent.
+ * gives them a warm, modern fitness identity: sun-washed ivory surfaces, deep
+ * plum text, vivid violet actions and a soft lime accent for positive states.
  *
  * Keep colors, spacing and typography centralized so screens do not encode
  * their own visual decisions.
  */
 export const appTheme: MD3Theme = {
   ...MD3LightTheme,
-  roundness: 4,
+  roundness: 12,
   colors: {
     ...MD3LightTheme.colors,
-    primary: '#B4475B',
+    primary: '#6C2BD9',
     onPrimary: '#FFFFFF',
-    primaryContainer: '#F8DDE1',
-    onPrimaryContainer: '#4A101C',
-    secondary: '#66795F',
+    primaryContainer: '#EFE4FC',
+    onPrimaryContainer: '#35135F',
+    secondary: '#71893F',
     onSecondary: '#FFFFFF',
-    secondaryContainer: '#E8EEE2',
-    onSecondaryContainer: '#2D3A29',
-    tertiary: '#A87343',
+    secondaryContainer: '#F0F6D9',
+    onSecondaryContainer: '#364312',
+    tertiary: '#B05168',
     onTertiary: '#FFFFFF',
-    tertiaryContainer: '#F7E5D4',
-    onTertiaryContainer: '#47280F',
+    tertiaryContainer: '#FBE7E9',
+    onTertiaryContainer: '#4E1F2B',
     error: '#A13A34',
     onError: '#FFFFFF',
     errorContainer: '#FFEDEC',
     onErrorContainer: '#6D211D',
-    background: '#FAF6F3',
-    onBackground: '#2C2029',
+    background: '#FBF6F2',
+    onBackground: '#2D1B36',
     surface: '#FFFFFF',
-    onSurface: '#2C2029',
-    surfaceVariant: '#F2E8E2',
-    onSurfaceVariant: '#6A5A65',
-    outline: '#B6A3AC',
-    outlineVariant: '#E5D7D1',
-    shadow: '#1E1118',
+    onSurface: '#2D1B36',
+    surfaceVariant: '#F5ECE8',
+    onSurfaceVariant: '#7A6A77',
+    outline: '#B7A5AD',
+    outlineVariant: '#EEE0DB',
+    shadow: '#3A2442',
     scrim: '#000000',
-    inverseSurface: '#392D35',
-    inverseOnSurface: '#F8EFEA',
-    inversePrimary: '#F4B6C1',
+    inverseSurface: '#392D3F',
+    inverseOnSurface: '#FBF4F8',
+    inversePrimary: '#D9BDFA',
     elevation: {
       ...MD3LightTheme.colors.elevation,
       level0: 'transparent',
-      level1: '#FFF9F6',
-      level2: '#FBF1EC',
-      level3: '#F8EAE4',
-      level4: '#F6E7E1',
-      level5: '#F4E3DD',
+      level1: '#FFF9F5',
+      level2: '#FDF3EE',
+      level3: '#FAEDE8',
+      level4: '#F8EAE4',
+      level5: '#F6E6E0',
     },
   },
 };
@@ -60,21 +60,39 @@ export const appTheme: MD3Theme = {
 export const colors = {
   background: appTheme.colors.background,
   surface: appTheme.colors.surface,
-  surfaceMuted: '#F7EFEA',
+  surfaceMuted: '#F9F0EB',
+  surfaceLavender: '#F5EFFC',
+  surfaceSet: '#F4EEFB',
   text: appTheme.colors.onSurface,
   textMuted: appTheme.colors.onSurfaceVariant,
   border: appTheme.colors.outlineVariant,
   primary: appTheme.colors.primary,
-  primaryPressed: '#943647',
+  primaryPressed: '#571FB3',
   primarySoft: appTheme.colors.primaryContainer,
+  primarySoftStrong: '#E2D2F7',
   onPrimary: appTheme.colors.onPrimary,
-  secondary: '#F0E6E0',
-  secondaryPressed: '#E4D7D0',
-  onSecondary: '#392A34',
-  sage: '#66795F',
-  sageSoft: '#E8EEE2',
+  secondary: '#F1ECF8',
+  secondaryPressed: '#E6DEEE',
+  onSecondary: '#4E2D72',
+  sage: '#71893F',
+  sageSoft: '#F0F6D9',
+  positive: '#DDF28C',
+  positivePressed: '#CCE874',
+  positiveSoft: '#F4F9DF',
+  onPositive: '#39480F',
   sand: '#A87343',
-  sandSoft: '#F7E5D4',
+  sandSoft: '#F8E9D8',
+  rose: '#B05168',
+  roseSoft: '#FBE7E9',
+  blush: '#FBE8E7',
+  lavender: '#F1E7FB',
+  lavenderStrong: '#E4D4F7',
+  ink: '#301A45',
+  onInk: '#FFFFFF',
+  peach: '#FBE3CC',
+  gold: '#E4A62F',
+  coral: '#ED8C82',
+  shadow: appTheme.colors.shadow,
   danger: appTheme.colors.error,
   dangerPressed: '#822D28',
   onDanger: appTheme.colors.onError,
@@ -104,8 +122,23 @@ export const radii = {
   pill: 999,
 } as const;
 
+/**
+ * Display typeface used by the redesigned workout summary.
+ *
+ * Nunito is distributed under the SIL Open Font License. Static weights are
+ * bundled in `assets/fonts`, so the screen works offline and keeps the same
+ * personality on iOS, Android and web.
+ */
+export const fonts = {
+  regular: 'Nunito_400Regular',
+  semibold: 'Nunito_600SemiBold',
+  bold: 'Nunito_700Bold',
+  extraBold: 'Nunito_800ExtraBold',
+} as const;
+
 export const fontSizes = {
   display: 34,
+  hero: 32,
   title: 28,
   heading: 22,
   subheading: 17,
