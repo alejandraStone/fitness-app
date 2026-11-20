@@ -6,10 +6,18 @@ The initial visual system was approved on 2026-10-19 by explicit product
 direction. It is the baseline for the routines and scheduling feature and for
 future screens unless a later decision updates this document.
 
-The 2026-11-16 saved-workout summary redesign updated the global palette to a
-violet, ivory and lime identity and introduced Nunito and bundled vector
-illustrations. The tokens below are the current baseline for every screen; the
-previous rose-primary palette is superseded.
+The 2026-11-16 redesign introduced Nunito and bundled vector illustrations and
+established the violet, ivory and lime identity used by the application. On
+2026-11-18 the saved-workout summary was revised to a screen-scoped palette:
+beige canvas, cream cards, dark brown text, lime actions and progress, lavender
+large blocks, chips and secondary buttons, sky-blue information, and red
+reserved for warnings and destructive actions. That palette applies only to
+Workout Detail; the rest of the application keeps the violet baseline until a
+global migration is explicitly approved.
+
+The global tokens below remain the baseline for every screen except Workout
+Detail, which uses the scoped palette in §3. The previous rose-primary palette
+is superseded.
 
 - **UI component library:** `react-native-paper` `5.15.3` (MIT).
 - **Platform support:** React Native, Expo SDK 58, iOS, Android and web.
@@ -41,13 +49,19 @@ training tool, not a performance-intimidation interface and not a stereotyped
 "feminine" theme.
 
 - Sun-washed ivory background with clean white cards and soft lavender or blush
-  surfaces.
+  surfaces on global screens.
 - Deep plum text rather than pure black.
 - Vivid violet for primary actions and selected dates.
 - Soft lime for positive and completed states, supported by restrained rose,
   coral, peach, sage and sand accents.
 - Generously rounded surfaces, pill actions and subtle, diffuse shadows instead
   of hard borders everywhere.
+- Workout Detail uses its own beige, cream and dark-brown canvas with lime,
+  lavender and sky-blue accents. Energy comes from geometric rings, speed arcs,
+  saturated color blocks, a lime marker highlight and recolored original
+  illustrations. Lavender is used only in defined blocks, chips and buttons,
+  never as organic background stains. Red is reserved for warnings and
+  destructive actions.
 - Generous spacing and a clear type hierarchy.
 - Original bundled vector illustrations carry the celebratory moments. Do not
   substitute emojis or stock photography, and do not introduce remote images.
@@ -92,9 +106,9 @@ with clear text.
 | `onPositive` | `#39480F` | Text and icons on positive |
 | `sand` | `#A87343` | Support tone |
 | `sandSoft` | `#F8E9D8` | Support surfaces |
-| `rose` | `#B05168` | Statistic icons and warm accent |
-| `roseSoft` | `#FBE7E9` | Softer rose surface |
-| `blush` | `#FBE8E7` | Statistics strip |
+| `rose` | `#B05168` | Warm accent |
+| `roseSoft` | `#FBE7E9` | Softer warm accent surface |
+| `blush` | `#FBE8E7` | Warm accent surface |
 | `lavender` | `#F1E7FB` | Badges and icon circles |
 | `lavenderStrong` | `#E4D4F7` | Stronger lavender surface |
 | `ink` | `#301A45` | Final summary action |
@@ -117,6 +131,44 @@ Core values are mapped into the Material 3 `MD3LightTheme` in
 `src/shared/ui/theme.ts`, so Paper components inherit the brand rather than
 stock Material colors. The additional semantic surfaces and accents are used
 through the exported `colors` object.
+
+### Workout Detail palette (screen-scoped)
+
+These tokens are exported as `workoutSummaryColors` in
+`src/shared/ui/theme.ts`. They apply only to Workout Detail. `workoutSummaryTheme`
+maps them into a nested Paper theme for the weight dialog and its text input;
+it never replaces the global provider.
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `background` | `#F1EAE0` | Screen background |
+| `surface` | `#FFF3E7` | Cards, hero panel, dialogs |
+| `surfaceMuted` | `#F7EBDD` | Notes and quiet groupings |
+| `text` | `#340404` | Primary text and icons |
+| `textMuted` | `#4B2323` | Secondary text |
+| `border` | `#E3D4C2` | Card outlines and botanical line art |
+| `action` | `#D7DC38` | Primary actions, completion and progress |
+| `actionPressed` | `#C5CB2C` | Pressed action |
+| `onAction` | `#340404` | Text and icons on lime |
+| `accent` | `#C4BBFE` | Large blocks, chips and secondary buttons |
+| `accentPressed` | `#B1A6FB` | Pressed accent |
+| `onAccent` | `#340404` | Text and icons on lavender |
+| `accentSoft` | `#EBE6FF` | Set rows and quiet lavender surfaces |
+| `info` | `#9CB9D9` | Information and statistics |
+| `infoSoft` | `#DFEAF5` | Weight pills and quiet information surfaces |
+| `onInfo` | `#340404` | Text and icons on sky blue |
+| `danger` | `#ED4140` | Warning fills and destructive actions only |
+| `dangerSoft` | `#FBDAD6` | Error surfaces |
+| `dangerText` | `#A8231F` | Error text and error outlines |
+| `onDanger` | `#340404` | Text on red fills |
+| `divider` | `rgba(52, 4, 4, 0.14)` | Internal dividers |
+| `shadow` | `#340404` | Card and action shadows |
+
+Contrast pairs are verified: dark brown on lime is 12.2:1, on lavender 10.2:1
+and on sky blue 8.9:1; secondary brown on beige is 11.3:1 and on cream 12.3:1.
+Red carries dark brown text (4.7:1), never cream (3.5:1). Error copy uses the
+darker `dangerText` because `danger` on cream is only 3.5:1; `dangerText` on
+cream is 6.6:1 and on beige 6.0:1. Color is never the only carrier of meaning.
 
 Overlays use the Paper theme `scrim` plus `surface` and `border` tokens. The
 sheet grabber uses `border`; the scrim uses `scrim`. The shared scrim opacity is
@@ -179,9 +231,9 @@ kept with the font files in `assets/fonts/Nunito-OFL.txt`.
 - Use `PaperProvider` once at the application root.
 - Shared wrappers in `src/shared/ui` own the app's default appearance:
   - `AppButton` for primary, secondary, outline, progress/acceptance, dark and
-    destructive actions. `progress` uses `colors.sage`; `dark` uses `colors.ink`
-    and is reserved for the final workout-summary action. All variants are
-    pill-shaped with a minimum content height of 44.
+    destructive actions. `progress` uses `colors.sage`. `summaryAction` (lime)
+    and `summaryAccent` (lavender) are reserved for Workout Detail. All variants
+    are pill-shaped with a minimum content height of 44.
   - `SheetHeaderAction` for compact actions in a navigation header or on either
     side of a sheet title, such as `Cancelar`/`Guardar` or
     `Cancelar`/`Continuar`.
@@ -192,7 +244,8 @@ kept with the font files in `assets/fonts/Nunito-OFL.txt`.
 - Celebratory surfaces use the original illustrations in
   `src/features/workout-detail/WorkoutSummaryIllustrations.tsx`,
   `src/shared/ui/CelebrationIllustrations.tsx` and
-  `src/entities/workout/ExerciseThumbnailIllustration.tsx`. Illustrations are
+  `src/entities/workout/ExerciseThumbnailIllustration.tsx`. The artwork used by
+  Workout Detail is recolored to the screen-scoped palette. Illustrations are
   decorative: their containers are marked non-interactive, and adjacent text
   carries the meaning.
 - A screen may replace the native navigation header with an in-screen header
@@ -321,47 +374,52 @@ kept with the font files in `assets/fonts/Nunito-OFL.txt`.
   remove or skip exercises or sets.
 - Workout Detail uses a full-screen celebration composition. The native
   navigation header is hidden; the route renders a custom in-screen header over
-  a warm illustrated backdrop with botanical corners. The header keeps a
-  44-pixel translucent back circle, a centered `Resumen` title, safe-area support
-  and an optional compact pencil action. It never shows a routine-level
-  destructive action.
-- The hero contains the original dumbbell illustration, the centered
-  `¡Entrenamiento completado!` heading, one short supportive subtitle and the
-  workout date. The exercise, set and repetition totals share one blush
-  statistics strip with rose icons and `${value}` / label pairs. There are no
-  three competing statistic cards.
-- Exercises render as white, generously rounded cards below the
+  a beige illustrated backdrop with geometric lime and sky-blue rings, speed
+  arcs and brown botanical line art. Organic lavender stains are not used. The
+  header keeps a 44-pixel cream back circle, a centered `Resumen` title,
+  safe-area support and an optional lime pencil action. It never shows a
+  routine-level destructive action.
+- The hero is a cream panel with the recolored lime, lavender and sky-blue
+  dumbbell illustration, the centered `¡Entrenamiento completado!` heading, one
+  short supportive subtitle and a lavender date chip. `completado!` carries a
+  lime marker highlight. The exercise, set and repetition totals share one
+  sky-blue statistics strip with cream icon circles, dark brown values and
+  `${value}` / label pairs. There are no three competing statistic cards.
+- Exercises render as cream, generously rounded cards below the
   `Ejercicios realizados` heading and its lavender count badge. Each collapsed
-  card shows an original thumbnail, the exercise name, planned sets and
-  repetition range, a `Peso usado` pill and a factual completion pill such as
-  `3 de 3 series` or `2 de 3 series`. The completion pill uses the positive
-  lime when complete and the soft sand tone when incomplete; it never repeats a
-  recommendation. Expanding the card reveals the snapshot note and one aligned
-  row per recorded set with actual weight, repetitions and any surplus
+  card shows an original lime and lavender thumbnail, the exercise name, planned
+  sets and repetition range, a sky-blue `Peso usado` pill and a factual
+  completion pill such as `3 de 3 series` or `2 de 3 series`. The completion
+  pill uses the lime action color when complete and a quiet cream surface with a
+  brown outline when incomplete; it never repeats a recommendation. Expanding
+  the card reveals the snapshot note and one aligned set row per recorded set on
+  a soft lavender surface, with actual weight, repetitions and any surplus
   repetitions. Exercise cards expose no progression actions.
-- A sticky footer above the bottom safe area holds one dark `Finalizar` action
-  with a lime check. It reuses the screen's existing leave behavior and does not
-  introduce a new destination.
+- A sticky footer above the bottom safe area holds one lime `Finalizar` action
+  with a dark brown check. It reuses the screen's existing leave behavior and
+  does not introduce a new destination.
 - Pending progression recommendations appear in one `Tu progresión` block
-  between the hero and `Ejercicios realizados`. The block starts with the
+  between the hero and `Ejercicios realizados`. The block starts with the lime
   progress badge and section heading. A single recommendation keeps the full
-  prototype-style card: a lavender surface with sparkles, a trophy, the
-  exercise-name tag, the current planned weight, `¡Superaste tu meta!`, a lime
-  `Objetivo cumplido` tag, a short explanation with the recorded repetitions and
-  the target, and the actions. Multiple recommendations share one compact
-  lavender header (`¡Superaste tus metas!`, the number of exercises and one short
-  explanation) followed by white expandable rows. Each row shows the exercise
-  name, goal indicator, repetitions, current weight and an expand control.
-  Expanding it reveals `Aumentar peso`, `Mantener peso` and `Decidir después`
-  without repeating the long explanation. No recommendation renders no block at
-  all.
+  prototype-style card: a lavender surface with lime and cream sparkles, a lime
+  trophy, the exercise-name tag, the current planned weight, `¡Superaste tu
+  meta!`, a lime `Objetivo cumplido` tag, a short explanation with the recorded
+  repetitions and the target, and the actions inside a cream action panel.
+  Multiple recommendations share one compact lavender header (`¡Superaste tus
+  metas!`, the number of exercises and one short explanation) followed by cream
+  expandable rows. Each row shows the exercise name, goal indicator,
+  repetitions, current weight and an expand control. Expanding it reveals
+  `Aumentar peso`, `Mantener peso` and `Decidir después` without repeating the
+  long explanation. No recommendation renders no block at all.
 - `Aumentar peso` opens the single-field in-app dialog with an empty
-  `Nuevo peso (kg)` field. The application never suggests, pre-fills or
-  auto-applies an increment. `Mantener peso` persists the keep-weight decision
-  and removes the affected recommendation immediately. `Decidir después`
-  collapses the card or row without persisting anything. The block is omitted
-  while recommendations load or refresh and when evaluation fails. Persistence
-  failures stay inline. No success snackbar, badge or confirmation is used.
+  `Nuevo peso (kg)` field on a cream surface. The application never suggests,
+  pre-fills or auto-applies an increment. `Mantener peso` persists the
+  keep-weight decision and removes the affected recommendation immediately.
+  `Decidir después` collapses the card or row without persisting anything. The
+  block is omitted while recommendations load or refresh and when evaluation
+  fails. Persistence failures stay inline. No success snackbar, badge or
+  confirmation is used. The dialog's Paper theme is scoped to Workout Detail so
+  its input focus, cursor and labels use the same brown and cream palette.
 - Workout History groups saved workouts by month, newest first, and shows the
   date, historical routine name and `N ejercicios · N series`. It never includes
   scheduled routines that have not been saved.

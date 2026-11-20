@@ -137,21 +137,21 @@ Records actual performance for an existing routine on a selected date.
 
 A saved workout's historical record. It is the destination right after a successful save and is also reachable from Workout History and from `Ver entrenamiento` on Home.
 
-The screen uses a celebratory full-screen composition over a warm illustrated backdrop. The native navigation header is hidden and replaced by an in-screen header with a translucent back circle, a centered `Resumen` title, safe-area support and an optional compact pencil action for editing the record.
+The screen uses a celebratory full-screen composition over a beige illustrated backdrop with geometric lime and sky-blue rings, speed arcs and brown botanical line art. Organic lavender stains are not used. The native navigation header is hidden and replaced by an in-screen header with a cream back circle, a centered `Resumen` title, safe-area support and an optional lime pencil action for editing the record. The screen uses the screen-scoped palette in `docs/desing/design-system.md` §3.
 
 Contains:
-- a celebratory hero with an original dumbbell illustration, the heading `¡Entrenamiento completado!` and one short supportive subtitle;
-- the workout date below the hero;
-- one blush statistics strip with the exercise, set and repetition totals, each with a rose icon and label;
+- a celebratory cream hero panel with an original lime, lavender and sky-blue dumbbell illustration, the heading `¡Entrenamiento completado!` with `completado!` on a lime marker highlight, and one short supportive subtitle;
+- a lavender date chip below the heading;
+- one sky-blue statistics strip with the exercise, set and repetition totals, each with a cream icon circle, brown icon and brown label;
 - a single progression block between the hero and the exercise list when recommendations are pending;
 - the `Ejercicios realizados` heading with a lavender count badge;
-- one white, rounded exercise card per recorded exercise, in historical order and without numbering;
-- in each collapsed exercise card: an original thumbnail, the exercise name, planned sets and repetition range, the weight actually used and a factual completion pill such as `3 de 3 series`;
-- expanding a card reveals its snapshot note and one row per recorded set with the actual weight and repetitions;
-- a sticky `Finalizar` action in dark ink with a lime check, above the bottom safe area;
+- one cream, rounded exercise card per recorded exercise, in historical order and without numbering;
+- in each collapsed exercise card: an original lime and lavender thumbnail, the exercise name, planned sets and repetition range, the weight actually used and a factual completion pill such as `3 de 3 series`;
+- expanding a card reveals its snapshot note and one soft-lavender set row per recorded set with the actual weight and repetitions;
+- a sticky lime `Finalizar` action with a dark brown check, above the bottom safe area;
 - no routine-level delete action and no editable workout date.
 
-The completion pill uses the positive lime when every planned set has a recorded result and the soft sand tone otherwise. It never duplicates a recommendation or prescribes an increment. Exercise cards expose no `Aumentar peso`, `Mantener peso` or `Decidir después` actions.
+The completion pill uses the lime action color when every planned set has a recorded result and a quiet cream surface with a brown outline otherwise. It never duplicates a recommendation or prescribes an increment. Exercise cards expose no `Aumentar peso`, `Mantener peso` or `Decidir después` actions.
 
 The detail stays readable if the source routine was edited or permanently deleted, because every displayed value comes from the saved snapshot. The screen reloads on focus so edits and routine changes appear immediately, and provides Spanish loading, not-found and retryable error states. `Finalizar` reuses the screen's leave behavior: it returns to the previous screen when possible and otherwise opens Workout History.
 
@@ -159,8 +159,8 @@ The detail stays readable if the source routine was edited or permanently delete
 
 When pending recommendations exist, one `Tu progresión` block appears between the hero and `Ejercicios realizados`. It starts with the progress badge and section heading.
 
-- A single recommendation uses the full recommendation card on a lavender surface with sparkles and a trophy. It shows the exercise name, current planned weight, `¡Superaste tu meta!`, a lime `Objetivo cumplido` indicator, a short explanation with the recorded repetitions and target, and the actions `Aumentar peso`, `Mantener peso` and `Decidir después`.
-- Multiple recommendations share one compact lavender header (`¡Superaste tus metas!`, the number of exercises and one short explanation) followed by white expandable rows. Each collapsed row shows the exercise name, `Objetivo cumplido`, the recorded repetitions, the current planned weight and an expand control. Expanding a row reveals the available actions without repeating the long explanation.
+- A single recommendation uses the full recommendation card on a lavender surface with lime and cream sparkles and a lime trophy. It shows the exercise name, current planned weight, `¡Superaste tu meta!`, a lime `Objetivo cumplido` indicator, a short explanation with the recorded repetitions and target, and the actions `Aumentar peso`, `Mantener peso` and `Decidir después` inside a cream action panel. The primary action is lime, the secondary action is lavender and the postponed action uses brown text.
+- Multiple recommendations share one compact lavender header (`¡Superaste tus metas!`, the number of exercises and one short explanation) followed by cream expandable rows. Each collapsed row shows the exercise name, `Objetivo cumplido`, the recorded repetitions, the current planned weight and an expand control. Expanding a row reveals the available actions without repeating the long explanation.
 - `Aumentar peso` opens an in-app dialog with an empty weight field. The dialog shows the current weight, asks for the new weight and confirms it before saving. The application never suggests, pre-fills or calculates an increment. The entered value must be a valid number greater than the current weight.
 - Confirming `Aumentar peso` updates only the matching current routine exercise's planned weight, preserving its name, sets, target repetitions, notes, order and schedule. The saved workout snapshot is never modified. The recommendation disappears immediately because the current planned weight no longer matches the snapshot.
 - `Mantener peso` stores the keep-weight decision for that saved exercise, removes the recommendation immediately and survives restarts.

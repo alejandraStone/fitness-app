@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Button, Icon, Text, TouchableRipple } from 'react-native-paper';
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
+import { Button, Icon, Text, TouchableRipple } from "react-native-paper";
 
-import type { ProgressionRecommendation } from '../../domain/progression';
-import type { WorkoutExerciseId } from '../../domain/workouts';
-import { formatWeightKg } from '../../entities/routine/format';
-import { AppButton } from '../../shared/ui/AppButton';
+import type { ProgressionRecommendation } from "../../domain/progression";
+import type { WorkoutExerciseId } from "../../domain/workouts";
+import { formatWeightKg } from "../../entities/routine/format";
+import { AppButton } from "../../shared/ui/AppButton";
 import {
   ProgressBadge,
   SparkleCluster,
   TrophyIllustration,
-} from '../../shared/ui/CelebrationIllustrations';
-import { ErrorBanner } from '../../shared/ui/ErrorBanner';
+} from "../../shared/ui/CelebrationIllustrations";
+import { ErrorBanner } from "../../shared/ui/ErrorBanner";
 import {
-  colors,
   fonts,
   fontSizes,
   radii,
   spacing,
-} from '../../shared/ui/theme';
+  workoutSummaryColors,
+} from "../../shared/ui/theme";
 import {
   formatDecideLaterAccessibilityLabel,
   formatIncreaseWeightAccessibilityLabel,
@@ -27,8 +27,8 @@ import {
   formatRecommendationRepetitions,
   formatRecommendationRepetitionsShort,
   formatRecommendationToggleAccessibilityLabel,
-} from './recommendation-format';
-export type ProgressionStatus = 'loading' | 'ready' | 'error';
+} from "./recommendation-format";
+export type ProgressionStatus = "loading" | "ready" | "error";
 
 export interface ProgressionSectionProps {
   status: ProgressionStatus;
@@ -61,7 +61,7 @@ export function ProgressionSection({
     ReadonlySet<WorkoutExerciseId>
   >(() => new Set());
 
-  if (status !== 'ready' || recommendations.length === 0) {
+  if (status !== "ready" || recommendations.length === 0) {
     return null;
   }
 
@@ -243,7 +243,7 @@ function HeroRecommendation({
 
           <View style={styles.achievementTag}>
             <Icon
-              color={colors.onPositive}
+              color={workoutSummaryColors.onAction}
               size={13}
               source="check-circle"
             />
@@ -260,11 +260,11 @@ function HeroRecommendation({
         )}. Meta de ${recommendation.plannedRepsMax} repeticiones. Objetivo cumplido.`}
         style={styles.explanation}
       >
-        Hiciste{' '}
+        Hiciste{" "}
         <Text style={styles.strong}>
           {formatRecommendationRepetitions(recommendation)}
-        </Text>{' '}
-        y alcanzaste tu meta de{' '}
+        </Text>{" "}
+        y alcanzaste tu meta de{" "}
         <Text style={styles.strong}>{recommendation.plannedRepsMax}</Text>. Te
         recomendamos subir el peso en tu próximo entrenamiento.
       </Text>
@@ -281,6 +281,7 @@ function HeroRecommendation({
           loading={saving}
           onPress={onIncreaseWeight}
           style={styles.action}
+          variant="summaryAction"
         />
         <AppButton
           accessibilityLabel={formatKeepWeightAccessibilityLabel(
@@ -292,7 +293,7 @@ function HeroRecommendation({
           loading={saving}
           onPress={onKeepWeight}
           style={styles.action}
-          variant="outline"
+          variant="summaryAccent"
         />
         <Button
           accessibilityLabel={formatDecideLaterAccessibilityLabel(
@@ -305,7 +306,7 @@ function HeroRecommendation({
           mode="text"
           onPress={onDecideLater}
           style={styles.laterAction}
-          textColor={colors.textMuted}
+          textColor={workoutSummaryColors.textMuted}
         >
           Decidir después
         </Button>
@@ -323,6 +324,8 @@ function CollapsedRecommendation({
   recommendation,
   onExpand,
 }: CollapsedRecommendationProps) {
+  const [pressed, setPressed] = useState(false);
+
   return (
     <TouchableRipple
       accessibilityLabel={formatRecommendationToggleAccessibilityLabel(
@@ -333,12 +336,23 @@ function CollapsedRecommendation({
       accessibilityState={{ expanded: false }}
       accessible
       onPress={onExpand}
-      rippleColor={colors.primarySoft}
+      onPressIn={() => {
+        setPressed(true);
+      }}
+      onPressOut={() => {
+        setPressed(false);
+      }}
+      rippleColor="transparent"
+      underlayColor="transparent"
       style={styles.collapsedCard}
     >
       <View style={styles.collapsedContent}>
         <View style={styles.checkCircle}>
-          <Icon color={colors.onPositive} size={17} source="check" />
+          <Icon
+            color={workoutSummaryColors.onAction}
+            size={17}
+            source="check"
+          />
         </View>
 
         <View style={styles.collapsedText}>
@@ -346,15 +360,19 @@ function CollapsedRecommendation({
             {recommendation.exerciseName}
           </Text>
           <Text style={styles.collapsedMeta}>
-            {formatWeightKg(recommendation.plannedWeightKg)} ·{' '}
-            {formatRecommendationRepetitionsShort(recommendation)} ·{' '}
+            {formatWeightKg(recommendation.plannedWeightKg)} ·{" "}
+            {formatRecommendationRepetitionsShort(recommendation)} ·{" "}
             {formatRecommendationGoalShort(recommendation)}
           </Text>
           <Text style={styles.collapsedStatus}>Objetivo cumplido</Text>
         </View>
 
-        <View style={styles.chevron}>
-          <Icon color={colors.primary} size={22} source="chevron-down" />
+        <View style={[styles.chevron, pressed && styles.chevronPressed]}>
+          <Icon
+            color={workoutSummaryColors.text}
+            size={22}
+            source={"chevron-down"}
+          />
         </View>
       </View>
     </TouchableRipple>
@@ -382,6 +400,8 @@ function CompactRecommendation({
   onKeepWeight,
   onDecideLater,
 }: CompactRecommendationProps) {
+  const [pressed, setPressed] = useState(false);
+
   return (
     <View style={styles.compactCard}>
       <TouchableRipple
@@ -393,12 +413,23 @@ function CompactRecommendation({
         accessibilityState={{ expanded }}
         accessible
         onPress={onToggle}
-        rippleColor={colors.primarySoft}
+        onPressIn={() => {
+          setPressed(true);
+        }}
+        onPressOut={() => {
+          setPressed(false);
+        }}
+        rippleColor="transparent"
         style={styles.compactTouch}
+        underlayColor="transparent"
       >
         <View style={styles.compactHeader}>
           <View style={styles.checkCircle}>
-            <Icon color={colors.onPositive} size={17} source="check" />
+            <Icon
+              color={workoutSummaryColors.onAction}
+              size={17}
+              source="check"
+            />
           </View>
 
           <View style={styles.compactText}>
@@ -412,7 +443,7 @@ function CompactRecommendation({
                 </Text>
               </View>
               <Text style={styles.compactMeta}>
-                {formatRecommendationRepetitionsShort(recommendation)} ·{' '}
+                {formatRecommendationRepetitionsShort(recommendation)} ·{" "}
                 {formatRecommendationGoalShort(recommendation)}
               </Text>
             </View>
@@ -424,11 +455,13 @@ function CompactRecommendation({
                 {formatWeightKg(recommendation.plannedWeightKg)}
               </Text>
             </View>
-            <Icon
-              color={colors.primary}
-              size={21}
-              source={expanded ? 'chevron-up' : 'chevron-down'}
-            />
+            <View style={[styles.chevron, pressed && styles.chevronPressed]}>
+              <Icon
+                color={workoutSummaryColors.text}
+                size={21}
+                source={expanded ? "chevron-up" : "chevron-down"}
+              />
+            </View>
           </View>
         </View>
       </TouchableRipple>
@@ -446,6 +479,7 @@ function CompactRecommendation({
             loading={saving}
             onPress={onIncreaseWeight}
             style={styles.action}
+            variant="summaryAction"
           />
           <AppButton
             accessibilityLabel={formatKeepWeightAccessibilityLabel(
@@ -457,7 +491,7 @@ function CompactRecommendation({
             loading={saving}
             onPress={onKeepWeight}
             style={styles.action}
-            variant="outline"
+            variant="summaryAccent"
           />
           <Button
             accessibilityLabel={formatDecideLaterAccessibilityLabel(
@@ -469,7 +503,7 @@ function CompactRecommendation({
             labelStyle={styles.laterActionLabel}
             mode="text"
             onPress={onDecideLater}
-            textColor={colors.textMuted}
+            textColor={workoutSummaryColors.textMuted}
           >
             Decidir después
           </Button>
@@ -484,8 +518,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   header: {
-    alignItems: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    flexDirection: "row",
     gap: spacing.sm,
   },
   headerBadge: {
@@ -493,30 +527,30 @@ const styles = StyleSheet.create({
     width: 40,
   },
   sectionTitle: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     flexShrink: 1,
     fontFamily: fonts.extraBold,
     fontSize: fontSizes.heading,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     letterSpacing: -0.4,
     lineHeight: 28,
   },
   heroCard: {
-    backgroundColor: colors.surfaceLavender,
+    backgroundColor: workoutSummaryColors.accent,
     borderRadius: radii.xl,
     gap: spacing.md,
-    overflow: 'hidden',
+    overflow: "hidden",
     padding: spacing.lg,
   },
   sparkles: {
-    position: 'absolute',
+    position: "absolute",
     right: spacing.md,
     top: spacing.sm,
     zIndex: 1,
   },
   heroTop: {
-    alignItems: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    flexDirection: "row",
     gap: spacing.md,
     paddingRight: spacing.xl,
   },
@@ -530,82 +564,85 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   tagRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
   },
   nameTag: {
-    backgroundColor: colors.lavender,
+    backgroundColor: workoutSummaryColors.surface,
     borderRadius: radii.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: 4,
   },
   nameTagText: {
-    color: colors.primary,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   weightTag: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    backgroundColor: workoutSummaryColors.surface,
+    borderColor: workoutSummaryColors.border,
     borderRadius: radii.pill,
     borderWidth: 1,
     paddingHorizontal: spacing.md,
     paddingVertical: 4,
   },
   weightTagText: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   heroTitle: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.extraBold,
     fontSize: 23,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     letterSpacing: -0.5,
     lineHeight: 27,
   },
   achievementTag: {
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: colors.positive,
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: workoutSummaryColors.action,
     borderRadius: radii.pill,
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 5,
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
   },
   achievementText: {
-    color: colors.onPositive,
+    color: workoutSummaryColors.onAction,
     fontFamily: fonts.bold,
     fontSize: 11,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   divider: {
-    backgroundColor: 'rgba(108, 43, 217, 0.12)',
+    backgroundColor: workoutSummaryColors.divider,
     height: 1,
   },
   explanation: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.regular,
     fontSize: 14,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     lineHeight: 21,
   },
   strong: {
-    color: colors.primary,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.extraBold,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   actions: {
+    backgroundColor: workoutSummaryColors.surface,
+    borderRadius: radii.lg,
     gap: spacing.sm,
+    padding: spacing.md,
   },
   action: {
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
   },
   primaryActionContent: {
     minHeight: 50,
@@ -614,7 +651,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
   },
   laterAction: {
-    alignSelf: 'center',
+    alignSelf: "center",
     borderRadius: radii.pill,
   },
   laterActionContent: {
@@ -622,18 +659,18 @@ const styles = StyleSheet.create({
   },
   laterActionLabel: {
     fontFamily: fonts.bold,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   multiCard: {
-    backgroundColor: colors.surfaceLavender,
+    backgroundColor: workoutSummaryColors.accent,
     borderRadius: radii.xl,
     gap: spacing.md,
-    overflow: 'hidden',
+    overflow: "hidden",
     padding: spacing.lg,
   },
   multiHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    flexDirection: "row",
     gap: spacing.md,
     paddingRight: spacing.xl,
   },
@@ -647,43 +684,45 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   multiTitle: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.extraBold,
     fontSize: 21,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     letterSpacing: -0.4,
     lineHeight: 25,
   },
   multiSubtitle: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.regular,
     fontSize: 13,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     lineHeight: 18,
   },
   compactList: {
     gap: spacing.sm,
   },
   compactCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: workoutSummaryColors.surface,
+    borderColor: workoutSummaryColors.border,
     borderRadius: radii.lg,
-    overflow: 'hidden',
+    borderWidth: 1,
+    overflow: "hidden",
   },
   compactTouch: {
     borderRadius: radii.lg,
   },
   compactHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    flexDirection: "row",
     gap: spacing.sm,
     padding: spacing.md,
   },
   checkCircle: {
-    alignItems: 'center',
-    backgroundColor: colors.positive,
+    alignItems: "center",
+    backgroundColor: workoutSummaryColors.action,
     borderRadius: radii.pill,
     height: 30,
-    justifyContent: 'center',
+    justifyContent: "center",
     width: 30,
   },
   compactText: {
@@ -692,72 +731,74 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   compactName: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.extraBold,
     fontSize: 16,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     lineHeight: 20,
   },
   compactMetaRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 6,
   },
   miniAchievement: {
-    backgroundColor: colors.positiveSoft,
+    backgroundColor: workoutSummaryColors.action,
     borderRadius: radii.pill,
     paddingHorizontal: 7,
     paddingVertical: 2,
   },
   miniAchievementText: {
-    color: colors.onPositive,
+    color: workoutSummaryColors.onAction,
     fontFamily: fonts.bold,
     fontSize: 9.5,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   compactMeta: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.semibold,
     fontSize: 11,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   compactTrailing: {
-    alignItems: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    flexDirection: "row",
     gap: 5,
   },
   compactWeightTag: {
-    backgroundColor: colors.surfaceSet,
+    backgroundColor: workoutSummaryColors.surfaceMuted,
     borderRadius: radii.pill,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
   },
   compactWeightText: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.bold,
     fontSize: 10.5,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   compactActions: {
-    borderTopColor: colors.border,
+    borderTopColor: workoutSummaryColors.border,
     borderTopWidth: 1,
     gap: spacing.sm,
     padding: spacing.md,
     paddingTop: spacing.sm,
   },
   collapsedCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: workoutSummaryColors.surface,
+    borderColor: workoutSummaryColors.border,
     borderRadius: radii.xl,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.05,
-    shadowRadius: 14,
+    borderWidth: 1,
     elevation: 1,
+    shadowColor: workoutSummaryColors.shadow,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
   },
   collapsedContent: {
-    alignItems: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    flexDirection: "row",
     gap: spacing.md,
     padding: spacing.md,
   },
@@ -767,29 +808,33 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   collapsedName: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.extraBold,
     fontSize: 16,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   collapsedMeta: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.semibold,
     fontSize: 11,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   collapsedStatus: {
-    color: colors.sage,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.bold,
     fontSize: 11,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   chevron: {
-    alignItems: 'center',
-    backgroundColor: colors.lavender,
+    alignItems: "center",
+    backgroundColor: workoutSummaryColors.accentSoft,
     borderRadius: radii.pill,
     height: 34,
-    justifyContent: 'center',
+    justifyContent: "center",
     width: 34,
+  },
+  chevronPressed: {
+    backgroundColor: workoutSummaryColors.accent,
+    transform: [{ scale: 0.94 }],
   },
 });

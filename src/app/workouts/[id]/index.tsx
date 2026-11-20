@@ -23,7 +23,7 @@ import {
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorState } from '../../../shared/ui/ErrorState';
 import { LoadingState } from '../../../shared/ui/LoadingState';
-import { colors } from '../../../shared/ui/theme';
+import { workoutSummaryColors } from '../../../shared/ui/theme';
 
 type LoadStatus = 'loading' | 'ready' | 'notFound' | 'error';
 
@@ -339,7 +339,7 @@ export default function WorkoutDetailScreen() {
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: colors.background,
+    backgroundColor: workoutSummaryColors.background,
     flex: 1,
   },
   safe: {

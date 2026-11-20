@@ -1,7 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 import { Icon, Text, TouchableRipple } from 'react-native-paper';
 
-import { colors, fonts, radii, spacing } from '../../shared/ui/theme';
+import {
+  fonts,
+  radii,
+  spacing,
+  workoutSummaryColors,
+} from '../../shared/ui/theme';
 
 export interface WorkoutDetailHeaderProps {
   onBack: () => void;
@@ -11,8 +16,9 @@ export interface WorkoutDetailHeaderProps {
 /**
  * In-screen header for the workout summary.
  *
- * A translucent white circle keeps the back action comfortable over the
- * illustration, while the edit action stays discreet on the opposite side.
+ * Cream circles keep the back action comfortable over the illustrated
+ * backdrop, while the edit action uses the lime action color on the opposite
+ * side.
  */
 export function WorkoutDetailHeader({
   onBack,
@@ -33,6 +39,7 @@ export function WorkoutDetailHeader({
       ) : (
         <CircleIconButton
           accessibilityLabel="Editar entrenamiento"
+          emphasis
           icon="pencil-outline"
           onPress={onEdit}
         />
@@ -45,12 +52,14 @@ interface CircleIconButtonProps {
   accessibilityLabel: string;
   icon: string;
   onPress: () => void;
+  emphasis?: boolean;
 }
 
 function CircleIconButton({
   accessibilityLabel,
   icon,
   onPress,
+  emphasis = false,
 }: CircleIconButtonProps) {
   return (
     <View style={styles.circleShadow}>
@@ -59,10 +68,18 @@ function CircleIconButton({
         accessibilityRole="button"
         borderless={false}
         onPress={onPress}
-        rippleColor={colors.primarySoft}
-        style={styles.circle}
+        rippleColor={workoutSummaryColors.accentSoft}
+        style={[styles.circle, emphasis && styles.circleEmphasis]}
       >
-        <Icon color={colors.text} size={22} source={icon} />
+        <Icon
+          color={
+            emphasis
+              ? workoutSummaryColors.onAction
+              : workoutSummaryColors.text
+          }
+          size={22}
+          source={icon}
+        />
       </TouchableRipple>
     </View>
   );
@@ -79,7 +96,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
   },
   title: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     flex: 1,
     fontFamily: fonts.bold,
     fontSize: 15,
@@ -89,19 +106,25 @@ const styles = StyleSheet.create({
   },
   circleShadow: {
     borderRadius: radii.pill,
-    shadowColor: colors.shadow,
+    elevation: 2,
+    shadowColor: workoutSummaryColors.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.09,
     shadowRadius: 10,
-    elevation: 2,
   },
   circle: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    backgroundColor: workoutSummaryColors.surface,
+    borderColor: workoutSummaryColors.border,
     borderRadius: radii.pill,
+    borderWidth: 1,
     height: 44,
     justifyContent: 'center',
     width: 44,
+  },
+  circleEmphasis: {
+    backgroundColor: workoutSummaryColors.action,
+    borderColor: workoutSummaryColors.action,
   },
   placeholder: {
     height: 44,

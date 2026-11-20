@@ -1,22 +1,22 @@
-import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { Icon, Text } from 'react-native-paper';
+import type { ReactNode } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Icon, Text } from "react-native-paper";
 
-import { summarizeWorkout, type Workout } from '../../domain/workouts';
+import { summarizeWorkout, type Workout } from "../../domain/workouts";
 import {
   formatWorkoutDate,
   WorkoutExerciseView,
   WorkoutStatsView,
-} from '../../entities/workout';
-import { AppButton } from '../../shared/ui/AppButton';
+} from "../../entities/workout";
+import { AppButton } from "../../shared/ui/AppButton";
 import {
-  colors,
   fonts,
   fontSizes,
   radii,
   spacing,
-} from '../../shared/ui/theme';
-import { CompletedWorkoutIllustration } from './WorkoutSummaryIllustrations';
+  workoutSummaryColors,
+} from "../../shared/ui/theme";
+import { CompletedWorkoutIllustration } from "./WorkoutSummaryIllustrations";
 
 export interface WorkoutDetailViewProps {
   workout: Workout;
@@ -31,9 +31,11 @@ export interface WorkoutDetailViewProps {
 /**
  * Saved workout summary.
  *
- * The screen follows the approved visual reference: a celebratory hero, one
- * compact stats strip, the progression block and white expandable exercise
- * cards. The final action stays anchored above the bottom safe area.
+ * The screen keeps the approved celebratory composition and applies the
+ * screen-scoped beige, cream, lime, lavender and sky-blue palette: a cream
+ * hero panel, a sky-blue statistics strip, the lavender progression block and
+ * cream exercise cards. The final action stays anchored above the bottom safe
+ * area.
  */
 export function WorkoutDetailView({
   workout,
@@ -55,28 +57,36 @@ export function WorkoutDetailView({
             <CompletedWorkoutIllustration />
           </View>
 
-          <Text accessibilityRole="header" style={styles.heroTitle}>
-            {'¡Entrenamiento\ncompletado!'}
-          </Text>
-          <Text style={styles.heroSubtitle}>
-            Sigue así, estás logrando grandes avances
-          </Text>
-
-          <View style={styles.stats}>
-            <WorkoutStatsView stats={summary} />
+          <View
+            accessibilityLabel="¡Entrenamiento completado!"
+            accessibilityRole="header"
+            accessible
+            style={styles.title}
+          >
+            <Text style={styles.heroTitle}>¡Entrenamiento</Text>
+            <View style={styles.highlight}>
+              <Text style={styles.highlightText}>completado!</Text>
+            </View>
           </View>
+          <Text style={styles.heroSubtitle}>
+            ¡Sigue así, estás logrando grandes avances!
+          </Text>
 
           <View
             accessibilityLabel={`Fecha del entrenamiento: ${date}`}
             accessible
-            style={styles.dateRow}
+            style={styles.dateChip}
           >
             <Icon
-              color={colors.textMuted}
+              color={workoutSummaryColors.onAccent}
               size={16}
               source="calendar-blank-outline"
             />
             <Text style={styles.date}>{displayDate}</Text>
+          </View>
+
+          <View style={styles.stats}>
+            <WorkoutStatsView stats={summary} />
           </View>
         </View>
 
@@ -89,7 +99,7 @@ export function WorkoutDetailView({
             </Text>
             <View
               accessibilityLabel={`${summary.exerciseCount} ${
-                summary.exerciseCount === 1 ? 'ejercicio' : 'ejercicios'
+                summary.exerciseCount === 1 ? "ejercicio" : "ejercicios"
               }`}
               accessible
               style={styles.countBadge}
@@ -107,10 +117,7 @@ export function WorkoutDetailView({
           ) : (
             <View style={styles.exerciseList}>
               {workout.exercises.map((exercise) => (
-                <WorkoutExerciseView
-                  exercise={exercise}
-                  key={exercise.id}
-                />
+                <WorkoutExerciseView exercise={exercise} key={exercise.id} />
               ))}
             </View>
           )}
@@ -122,12 +129,16 @@ export function WorkoutDetailView({
           accessibilityLabel="Finalizar resumen del entrenamiento"
           contentStyle={styles.finishContent}
           icon={({ size }) => (
-            <Icon color={colors.positive} size={size} source="check" />
+            <Icon
+              color={workoutSummaryColors.onAction}
+              size={size}
+              source="check"
+            />
           )}
           label="Finalizar"
           onPress={onFinish}
           style={styles.finishButton}
-          variant="dark"
+          variant="summaryAction"
         />
       </View>
     </View>
@@ -145,111 +156,148 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
   },
   hero: {
-    alignItems: 'center',
+    alignItems: "center",
+    backgroundColor: workoutSummaryColors.surface,
+    borderColor: workoutSummaryColors.border,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    elevation: 2,
     gap: spacing.sm,
+    padding: spacing.lg,
+    shadowColor: workoutSummaryColors.shadow,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.06,
+    shadowRadius: 20,
   },
   illustration: {
     aspectRatio: 280 / 190,
     maxWidth: 280,
-    width: '78%',
+    width: "78%",
+  },
+  title: {
+    alignItems: "center",
+    gap: 1,
+    marginTop: spacing.xs,
   },
   heroTitle: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.extraBold,
     fontSize: fontSizes.hero,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     letterSpacing: -0.8,
-    lineHeight: 35,
-    textAlign: 'center',
+    lineHeight: 34,
+    textAlign: "center",
+  },
+  highlight: {
+    backgroundColor: workoutSummaryColors.action,
+    borderRadius: 10,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 1,
+    transform: [{ rotate: "-1.5deg" }],
+  },
+  highlightText: {
+    color: workoutSummaryColors.onAction,
+    fontFamily: fonts.extraBold,
+    fontSize: fontSizes.hero,
+    fontWeight: "normal",
+    letterSpacing: -0.8,
+    lineHeight: 34,
+    textAlign: "center",
   },
   heroSubtitle: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.semibold,
     fontSize: 14,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     lineHeight: 20,
     maxWidth: 300,
     paddingHorizontal: spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
+    marginTop: spacing.md,
   },
-  stats: {
-    alignSelf: 'stretch',
-    marginTop: spacing.xs,
-  },
-  dateRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
+  dateChip: {
+    alignItems: "center",
+    borderRadius: radii.pill,
+    flexDirection: "row",
     gap: 6,
-    justifyContent: 'center',
+    justifyContent: "center",
     marginTop: 2,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 1,
   },
   date: {
-    color: colors.textMuted,
-    fontFamily: fonts.semibold,
+    color: workoutSummaryColors.onAccent,
+    fontFamily: fonts.bold,
     fontSize: 13,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     lineHeight: 18,
-    textAlign: 'center',
+    textAlign: "center",
+  },
+  stats: {
+    alignSelf: "stretch",
+    marginTop: spacing.xs,
   },
   section: {
     gap: spacing.md,
   },
   sectionHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    flexDirection: "row",
     gap: spacing.sm,
   },
   sectionTitle: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     flexShrink: 1,
     fontFamily: fonts.extraBold,
     fontSize: fontSizes.heading,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     letterSpacing: -0.4,
     lineHeight: 28,
   },
   countBadge: {
-    alignItems: 'center',
-    backgroundColor: colors.lavender,
+    alignItems: "center",
+    backgroundColor: workoutSummaryColors.accent,
     borderRadius: radii.pill,
     height: 28,
-    justifyContent: 'center',
+    justifyContent: "center",
     minWidth: 28,
     paddingHorizontal: 7,
   },
   countText: {
-    color: colors.primary,
+    color: workoutSummaryColors.onAccent,
     fontFamily: fonts.extraBold,
     fontSize: 13,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   exerciseList: {
     gap: spacing.md,
   },
   emptyCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: workoutSummaryColors.surface,
+    borderColor: workoutSummaryColors.border,
     borderRadius: radii.xl,
+    borderWidth: 1,
     padding: spacing.lg,
   },
   emptyText: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 20,
   },
   footer: {
+    backgroundColor: workoutSummaryColors.background,
     paddingBottom: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
   },
   finishButton: {
     borderRadius: radii.pill,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.16,
-    shadowRadius: 18,
     elevation: 4,
+    shadowColor: workoutSummaryColors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
   },
   finishContent: {
     minHeight: 54,

@@ -1,16 +1,21 @@
-import { Fragment } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Icon, Text } from 'react-native-paper';
+import { Fragment } from "react";
+import { StyleSheet, View } from "react-native";
+import { Icon, Text } from "react-native-paper";
 
-import type { WorkoutSummary } from '../../domain/workouts';
-import { formatSetCount } from '../routine/format';
-import { colors, fonts, radii, spacing } from '../../shared/ui/theme';
-import { formatExerciseCount, formatRepCount } from './format';
+import type { WorkoutSummary } from "../../domain/workouts";
+import { formatSetCount } from "../routine/format";
+import {
+  fonts,
+  radii,
+  spacing,
+  workoutSummaryColors,
+} from "../../shared/ui/theme";
+import { formatExerciseCount, formatRepCount } from "./format";
 
 /** Saved-workout totals displayed by Workout Detail and Workout History. */
 export type WorkoutStats = Pick<
   WorkoutSummary,
-  'exerciseCount' | 'totalSets' | 'totalReps'
+  "exerciseCount" | "totalSets" | "totalReps"
 >;
 
 export interface WorkoutStatsViewProps {
@@ -20,23 +25,24 @@ export interface WorkoutStatsViewProps {
 /**
  * Single compact strip with the exercise, set and repetition totals.
  *
- * The three figures share one soft blush container instead of competing cards.
+ * The three figures share one sky-blue information block with cream icon
+ * circles, dark brown values and no competing cards.
  */
 export function WorkoutStatsView({ stats }: WorkoutStatsViewProps) {
   const values = [
     {
-      icon: 'dumbbell',
-      label: stats.exerciseCount === 1 ? 'Ejercicio' : 'Ejercicios',
+      icon: "dumbbell",
+      label: stats.exerciseCount === 1 ? "Ejercicio" : "Ejercicios",
       value: stats.exerciseCount,
     },
     {
-      icon: 'layers-outline',
-      label: stats.totalSets === 1 ? 'Serie' : 'Series',
+      icon: "layers-outline",
+      label: stats.totalSets === 1 ? "Serie" : "Series",
       value: stats.totalSets,
     },
     {
-      icon: 'repeat',
-      label: stats.totalReps === 1 ? 'Repetición' : 'Repeticiones',
+      icon: "repeat",
+      label: stats.totalReps === 1 ? "Repetición" : "Repeticiones",
       value: stats.totalReps,
     },
   ] as const;
@@ -55,7 +61,13 @@ export function WorkoutStatsView({ stats }: WorkoutStatsViewProps) {
         <Fragment key={item.label}>
           {index === 0 ? null : <View style={styles.divider} />}
           <View style={styles.stat}>
-            <Icon color={colors.rose} size={20} source={item.icon} />
+            <View style={styles.iconCircle}>
+              <Icon
+                color={workoutSummaryColors.text}
+                size={19}
+                source={item.icon}
+              />
+            </View>
             <Text style={styles.value}>{item.value}</Text>
             <Text style={styles.label}>{item.label}</Text>
           </View>
@@ -67,37 +79,46 @@ export function WorkoutStatsView({ stats }: WorkoutStatsViewProps) {
 
 const styles = StyleSheet.create({
   strip: {
-    alignItems: 'center',
-    backgroundColor: colors.blush,
+    alignItems: "center",
+    backgroundColor: workoutSummaryColors.surface,
     borderRadius: radii.xl,
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: spacing.xs,
     paddingVertical: spacing.md,
   },
   stat: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
-    gap: 1,
-    justifyContent: 'center',
-    minHeight: 72,
+    gap: 2,
+    justifyContent: "center",
+    minHeight: 84,
+  },
+  iconCircle: {
+    alignItems: "center",
+    backgroundColor: workoutSummaryColors.infoSoft,
+    borderRadius: radii.pill,
+    height: 32,
+    justifyContent: "center",
+    width: 32,
+    marginBottom: spacing.md,
   },
   divider: {
-    backgroundColor: 'rgba(176, 81, 104, 0.16)',
-    height: 50,
+    backgroundColor: workoutSummaryColors.divider,
+    height: 56,
     width: 1,
   },
   value: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.extraBold,
-    fontSize: 22,
-    fontWeight: 'normal',
+    fontSize: 23,
+    fontWeight: "normal",
     letterSpacing: -0.3,
     lineHeight: 26,
   },
   label: {
-    color: colors.textMuted,
-    fontFamily: fonts.semibold,
-    fontSize: 12,
-    fontWeight: 'normal',
+    color: workoutSummaryColors.textMuted,
+    fontFamily: fonts.bold,
+    fontSize: 11,
+    fontWeight: "normal",
   },
 });

@@ -4,9 +4,9 @@ import type {
   TextStyle,
 } from 'react-native';
 import { View } from 'react-native';
-import { HelperText, TextInput } from 'react-native-paper';
+import { HelperText, TextInput, useTheme } from 'react-native-paper';
 
-import { colors, fonts, radii, spacing } from './theme';
+import { fonts, radii, spacing } from './theme';
 
 type SupportedTextInputProps = Pick<
   TextInputProps,
@@ -40,26 +40,28 @@ export function AppTextInput({
   multiline = false,
   ...inputProps
 }: AppTextInputProps) {
+  const theme = useTheme();
+
   return (
     <View style={{ gap: spacing.xs }}>
       <TextInput
-        activeOutlineColor={colors.primary}
+        activeOutlineColor={theme.colors.primary}
         accessibilityLabel={inputProps.accessibilityLabel ?? label}
         contentStyle={[{ fontFamily: fonts.regular }, contentStyle]}
         error={error !== undefined}
         label={label}
         mode="outlined"
         multiline={multiline}
-        outlineColor={colors.border}
+        outlineColor={theme.colors.outlineVariant}
         outlineStyle={{ borderRadius: radii.md }}
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={theme.colors.onSurfaceVariant}
         style={[
-          { backgroundColor: colors.inputBackground },
+          { backgroundColor: theme.colors.surface },
           multiline && { minHeight: 112 },
           style,
         ]}
         textAlignVertical={multiline ? 'top' : 'center'}
-        textColor={colors.text}
+        textColor={theme.colors.onSurface}
         {...inputProps}
       />
       {error !== undefined ? (

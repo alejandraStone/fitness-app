@@ -1,19 +1,24 @@
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Icon, Text, TouchableRipple } from 'react-native-paper';
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
+import { Icon, Text, TouchableRipple } from "react-native-paper";
 
-import type { WorkoutExercise, WorkoutSet } from '../../domain/workouts';
-import { colors, fonts, radii, spacing } from '../../shared/ui/theme';
-import { formatWeightKg } from '../routine/format';
-import { ExerciseThumbnailIllustration } from './ExerciseThumbnailIllustration';
-import { formatExerciseUsedWeight } from './format';
+import type { WorkoutExercise, WorkoutSet } from "../../domain/workouts";
+import {
+  fonts,
+  radii,
+  spacing,
+  workoutSummaryColors,
+} from "../../shared/ui/theme";
+import { formatWeightKg } from "../routine/format";
+import { ExerciseThumbnailIllustration } from "./ExerciseThumbnailIllustration";
+import { formatExerciseUsedWeight } from "./format";
 
 export interface WorkoutExerciseViewProps {
   exercise: WorkoutExercise;
 }
 
 /**
- * White exercise card used by the workout summary.
+ * Cream exercise card used by the workout summary.
  *
  * The collapsed state keeps the exercise identity, target, used weight and set
  * completion visible. Expanding the card reveals the recorded set rows without
@@ -21,6 +26,8 @@ export interface WorkoutExerciseViewProps {
  */
 export function WorkoutExerciseView({ exercise }: WorkoutExerciseViewProps) {
   const [expanded, setExpanded] = useState(false);
+  const [pressed, setPressed] = useState(false);
+
   const usedWeight = formatExerciseUsedWeight(exercise.sets);
   const target = `${formatCompactSetCount(
     exercise.plannedSets,
@@ -33,12 +40,11 @@ export function WorkoutExerciseView({ exercise }: WorkoutExerciseViewProps) {
   const setCountLabel = `${exercise.sets.length} de ${formatCompactSetCount(
     exercise.plannedSets,
   )}`;
-
   return (
     <View style={styles.card}>
       <TouchableRipple
         accessibilityLabel={`${exercise.nameSnapshot}. ${target}. Peso utilizado: ${usedWeight}. ${setCountLabel} registradas. ${
-          expanded ? 'Ocultar resultados.' : 'Mostrar resultados.'
+          expanded ? "Ocultar resultados." : "Mostrar resultados."
         }`}
         accessibilityRole="button"
         accessibilityState={{ expanded }}
@@ -46,7 +52,14 @@ export function WorkoutExerciseView({ exercise }: WorkoutExerciseViewProps) {
         onPress={() => {
           setExpanded((current) => !current);
         }}
-        rippleColor={colors.primarySoft}
+        onPressIn={() => {
+          setPressed(true);
+        }}
+        onPressOut={() => {
+          setPressed(false);
+        }}
+        rippleColor="transparent"
+        underlayColor="transparent"
         style={styles.headerTouch}
       >
         <View style={styles.header}>
@@ -59,11 +72,11 @@ export function WorkoutExerciseView({ exercise }: WorkoutExerciseViewProps) {
             <Text style={styles.target}>{target}</Text>
           </View>
 
-          <View style={styles.chevron}>
+          <View style={[styles.chevron, pressed && styles.chevronPressed]}>
             <Icon
-              color={colors.primary}
+              color={workoutSummaryColors.text}
               size={22}
-              source={expanded ? 'chevron-up' : 'chevron-down'}
+              source={expanded ? "chevron-up" : "chevron-down"}
             />
           </View>
         </View>
@@ -72,7 +85,8 @@ export function WorkoutExerciseView({ exercise }: WorkoutExerciseViewProps) {
       <View style={styles.pills}>
         <View style={styles.weightPill}>
           <Text style={styles.weightPillText}>
-            Peso usado · <Text style={styles.weightPillValue}>{usedWeight}</Text>
+            Peso usado ·{" "}
+            <Text style={styles.weightPillValue}>{usedWeight}</Text>
           </Text>
         </View>
 
@@ -84,9 +98,13 @@ export function WorkoutExerciseView({ exercise }: WorkoutExerciseViewProps) {
             ]}
           >
             <Icon
-              color={complete ? colors.onPositive : colors.sand}
+              color={
+                complete
+                  ? workoutSummaryColors.onAction
+                  : workoutSummaryColors.textMuted
+              }
               size={13}
-              source={complete ? 'check' : 'progress-clock'}
+              source={complete ? "check" : "progress-clock"}
             />
             <Text
               style={[
@@ -131,7 +149,7 @@ export function WorkoutExerciseView({ exercise }: WorkoutExerciseViewProps) {
     </View>
   );
 }
-
+//esto sirve para mostrar la informacion de cada set de un ejercicio, incluyendo el peso y las repeticiones realizadas, así como si se superó el objetivo de repeticiones planeadas.
 export interface WorkoutSetViewProps {
   set: WorkoutSet;
   /** Target repetitions captured in the workout snapshot. */
@@ -139,10 +157,7 @@ export interface WorkoutSetViewProps {
 }
 
 /** Read-only row with the actual weight and repetitions of one set. */
-export function WorkoutSetView({
-  set,
-  plannedRepsMax,
-}: WorkoutSetViewProps) {
+export function WorkoutSetView({ set, plannedRepsMax }: WorkoutSetViewProps) {
   const extraReps =
     plannedRepsMax > 0 && set.reps > plannedRepsMax
       ? set.reps - plannedRepsMax
@@ -152,16 +167,12 @@ export function WorkoutSetView({
     <View
       accessibilityLabel={`Serie ${set.setNumber}: ${formatWeightKg(
         set.weightKg,
-      )}, ${set.reps} ${set.reps === 1 ? 'repetición' : 'repeticiones'}${
-        extraReps > 0 ? `, ${extraReps} por encima del objetivo` : ''
+      )}, ${set.reps} ${set.reps === 1 ? "repetición" : "repeticiones"}${
+        extraReps > 0 ? `, ${extraReps} por encima del objetivo` : ""
       }`}
       accessible
       style={styles.setRow}
     >
-      <View style={styles.setNumber}>
-        <Text style={styles.setNumberText}>{set.setNumber}</Text>
-      </View>
-
       <View style={styles.setDescription}>
         <Text style={styles.setTitle}>Serie {set.setNumber}</Text>
         <Text style={styles.setWeight}>{formatWeightKg(set.weightKg)}</Text>
@@ -169,7 +180,7 @@ export function WorkoutSetView({
 
       <View style={styles.setResult}>
         <Text style={styles.repsValue}>{set.reps}</Text>
-        <Text style={styles.repsLabel}>{set.reps === 1 ? 'rep' : 'reps'}</Text>
+        <Text style={styles.repsLabel}>{set.reps === 1 ? "rep" : "reps"}</Text>
       </View>
 
       {extraReps > 0 ? (
@@ -182,7 +193,7 @@ export function WorkoutSetView({
 }
 
 function formatCompactSetCount(sets: number): string {
-  return `${sets} ${sets === 1 ? 'serie' : 'series'}`;
+  return `${sets} ${sets === 1 ? "serie" : "series"}`;
 }
 
 function formatCompactRepRange(min: number, max: number): string {
@@ -191,22 +202,25 @@ function formatCompactRepRange(min: number, max: number): string {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: workoutSummaryColors.surface,
+    borderColor: workoutSummaryColors.border,
     borderRadius: radii.xl,
+    borderWidth: 1,
+    elevation: 1,
     gap: spacing.md,
     padding: spacing.lg,
-    shadowColor: colors.shadow,
+    shadowColor: workoutSummaryColors.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.05,
     shadowRadius: 18,
-    elevation: 1,
   },
   headerTouch: {
     borderRadius: radii.lg,
+    overflow: "hidden",
   },
   header: {
-    alignItems: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    flexDirection: "row",
     gap: spacing.md,
   },
   thumbnail: {
@@ -219,108 +233,114 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   name: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.extraBold,
     fontSize: 20,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     letterSpacing: -0.3,
     lineHeight: 25,
   },
   target: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.semibold,
     fontSize: 13,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     lineHeight: 18,
   },
   chevron: {
-    alignItems: 'center',
-    backgroundColor: colors.lavender,
+    alignItems: "center",
+    backgroundColor: workoutSummaryColors.accentSoft,
     borderRadius: radii.pill,
     height: 36,
-    justifyContent: 'center',
+    justifyContent: "center",
     width: 36,
   },
+  chevronPressed: {
+    backgroundColor: workoutSummaryColors.accent,
+    transform: [{ scale: 0.94 }],
+  },
   pills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
   },
   weightPill: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.surfaceSet,
+    alignSelf: "flex-start",
+    backgroundColor: workoutSummaryColors.infoSoft,
     borderRadius: radii.pill,
-    justifyContent: 'center',
+    justifyContent: "center",
     minHeight: 32,
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
   },
   weightPillText: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.semibold,
     fontSize: 12,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   weightPillValue: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.bold,
   },
   completionPill: {
-    alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignItems: "center",
+    alignSelf: "flex-start",
     borderRadius: radii.pill,
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 5,
-    justifyContent: 'center',
+    justifyContent: "center",
     minHeight: 32,
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
   },
   completionPillDone: {
-    backgroundColor: colors.positive,
+    backgroundColor: workoutSummaryColors.action,
   },
   completionPillOpen: {
-    backgroundColor: colors.sandSoft,
+    backgroundColor: workoutSummaryColors.surfaceMuted,
+    borderColor: workoutSummaryColors.border,
+    borderWidth: 1,
   },
   completionPillText: {
     fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   completionPillTextDone: {
-    color: colors.onPositive,
+    color: workoutSummaryColors.onAction,
   },
   completionPillTextOpen: {
-    color: colors.sand,
+    color: workoutSummaryColors.textMuted,
   },
   details: {
     gap: spacing.sm,
     paddingTop: spacing.xs,
   },
   note: {
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: workoutSummaryColors.surfaceMuted,
     borderRadius: radii.md,
     gap: 2,
     padding: spacing.md,
   },
   noteLabel: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.bold,
     fontSize: 10,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   noteText: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.regular,
     fontSize: 13,
-    fontStyle: 'italic',
-    fontWeight: 'normal',
+    fontStyle: "italic",
+    fontWeight: "normal",
     lineHeight: 19,
   },
   emptySets: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 19,
@@ -329,28 +349,30 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   setRow: {
-    alignItems: 'center',
-    backgroundColor: colors.surfaceSet,
+    alignItems: "center",
+    backgroundColor: workoutSummaryColors.accentSoft,
     borderRadius: radii.lg,
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
     minHeight: 62,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
   setNumber: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
+    alignItems: "center",
+    backgroundColor: workoutSummaryColors.surface,
+    borderColor: workoutSummaryColors.border,
     borderRadius: radii.pill,
+    borderWidth: 1,
     height: 32,
-    justifyContent: 'center',
+    justifyContent: "center",
     width: 32,
   },
   setNumberText: {
-    color: colors.primary,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.extraBold,
     fontSize: 14,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   setDescription: {
     flex: 1,
@@ -358,49 +380,49 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   setTitle: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.bold,
     fontSize: 13,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   setWeight: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.regular,
     fontSize: 11,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   setResult: {
-    alignItems: 'baseline',
-    flexDirection: 'row',
+    alignItems: "baseline",
+    flexDirection: "row",
     gap: 3,
   },
   repsValue: {
-    color: colors.text,
+    color: workoutSummaryColors.text,
     fontFamily: fonts.extraBold,
     fontSize: 21,
-    fontWeight: 'normal',
+    fontWeight: "normal",
     letterSpacing: -0.4,
   },
   repsLabel: {
-    color: colors.textMuted,
+    color: workoutSummaryColors.textMuted,
     fontFamily: fonts.semibold,
     fontSize: 11,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
   extraPill: {
-    alignItems: 'center',
-    backgroundColor: colors.positive,
+    alignItems: "center",
+    backgroundColor: workoutSummaryColors.action,
     borderRadius: radii.pill,
-    justifyContent: 'center',
+    justifyContent: "center",
     minHeight: 24,
     minWidth: 32,
     paddingHorizontal: 7,
     paddingVertical: 3,
   },
   extraPillText: {
-    color: colors.onPositive,
+    color: workoutSummaryColors.onAction,
     fontFamily: fonts.extraBold,
     fontSize: 11,
-    fontWeight: 'normal',
+    fontWeight: "normal",
   },
 });

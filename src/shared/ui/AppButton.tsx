@@ -4,7 +4,7 @@ import {
 } from 'react-native-paper';
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import { colors, fonts, radii } from './theme';
+import { colors, fonts, radii, workoutSummaryColors } from './theme';
 
 export type AppButtonVariant =
   | 'primary'
@@ -12,7 +12,9 @@ export type AppButtonVariant =
   | 'outline'
   | 'progress'
   | 'dark'
-  | 'danger';
+  | 'danger'
+  | 'summaryAction'
+  | 'summaryAccent';
 
 export interface AppButtonProps {
   label: string;
@@ -59,6 +61,16 @@ const variantProps: Record<
     mode: 'contained',
     buttonColor: colors.danger,
     textColor: colors.onDanger,
+  },
+  summaryAction: {
+    mode: 'contained',
+    buttonColor: workoutSummaryColors.action,
+    textColor: workoutSummaryColors.onAction,
+  },
+  summaryAccent: {
+    mode: 'contained',
+    buttonColor: workoutSummaryColors.accent,
+    textColor: workoutSummaryColors.onAccent,
   },
 };
 
